@@ -2,6 +2,10 @@ import { useState } from "react";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 
+// ================= BASE URL (🔥 FIX) =================
+const BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
 export default function ImageCarousel({ images, onPreview, onDoubleClick }) {
 
   const [index, setIndex] = useState(0);
@@ -18,9 +22,8 @@ export default function ImageCarousel({ images, onPreview, onDoubleClick }) {
     <div className="relative w-full bg-black rounded-lg overflow-hidden">
 
       {/* IMAGE */}
-
       <img
-        src={`http://localhost:5000/uploads/${images[index]}`}
+        src={`${BASE_URL}/uploads/${images[index]}`}
         onClick={() => onPreview(index)}     // ✅ SEND INDEX
         onDoubleClick={onDoubleClick}        // ✅ LIKE ON DOUBLE CLICK
         className="
@@ -34,7 +37,6 @@ export default function ImageCarousel({ images, onPreview, onDoubleClick }) {
       />
 
       {/* LEFT BUTTON */}
-
       <button
         onClick={prev}
         className="
@@ -54,7 +56,6 @@ export default function ImageCarousel({ images, onPreview, onDoubleClick }) {
       </button>
 
       {/* RIGHT BUTTON */}
-
       <button
         onClick={next}
         className="
@@ -74,11 +75,8 @@ export default function ImageCarousel({ images, onPreview, onDoubleClick }) {
       </button>
 
       {/* DOT INDICATORS */}
-
       <div className="absolute bottom-2 w-full flex justify-center gap-1">
-
         {images.map((_, i) => (
-
           <span
             key={i}
             className={`
@@ -86,9 +84,7 @@ export default function ImageCarousel({ images, onPreview, onDoubleClick }) {
               ${i === index ? "bg-cyan-400" : "bg-gray-600"}
             `}
           />
-
         ))}
-
       </div>
 
     </div>
