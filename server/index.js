@@ -2,7 +2,6 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import http from "http";
-
 import { Server } from "socket.io";
 
 // ================= ROUTES =================
@@ -23,10 +22,18 @@ const app = express();
 
 // ================= MIDDLEWARE =================
 
-app.use(cors({
-  origin: "http://localhost:5173",
-  credentials: true
-}));
+// ✅ Allow Netlify + localhost
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://cybergram-frontend.netlify.app"
+];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true
+  })
+);
 
 app.use(express.json());
 
@@ -35,14 +42,13 @@ app.use("/uploads", express.static("uploads"));
 
 // ================= SOCKET SETUP =================
 
-// Create HTTP server
 const server = http.createServer(app);
 
-// Attach socket.io
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST"]
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
@@ -50,88 +56,54 @@ const io = new Server(server, {
 app.set("io", io);
 
 // ================= ONLINE USERS MAP =================
-// userId => Set(socketIds)
 
 const onlineUsers = new Map();
 
 // ================= SOCKET EVENTS =================
 
 io.on("connection", (socket) => {
-
   console.log("Socket Connected:", socket.id);
 
-  // ================= JOIN ROOM =================
-
   socket.on("join", (userId) => {
-
     const roomId = String(userId);
-
     socket.join(roomId);
 
-    // MULTI TAB / MULTI DEVICE SAFE
     if (!onlineUsers.has(roomId)) {
       onlineUsers.set(roomId, new Set());
     }
 
     onlineUsers.get(roomId).add(socket.id);
 
-    console.log("User joined room:", roomId);
-
-    // ✅ SEND FULL ONLINE LIST TO NEW USER
     const onlineList = Array.from(onlineUsers.keys());
     socket.emit("online_users", onlineList);
-
-    // ✅ BROADCAST ONLY THIS USER TO OTHERS
     socket.broadcast.emit("user_online", roomId);
-
   });
-
-  // ================= MESSAGE SEEN =================
 
   socket.on("message_seen", ({ senderId, messageId }) => {
-
     if (!senderId || !messageId) return;
-
-    io.to(String(senderId)).emit("message_seen_update", {
-      messageId
-    });
-
+    io.to(String(senderId)).emit("message_seen_update", { messageId });
   });
 
-  // ================= DISCONNECT =================
-
   socket.on("disconnect", () => {
-
     let disconnectedUser = null;
 
     for (let [userId, socketSet] of onlineUsers.entries()) {
-
       if (socketSet.has(socket.id)) {
-
         socketSet.delete(socket.id);
-
-        // Remove user ONLY if all tabs/devices closed
         if (socketSet.size === 0) {
           onlineUsers.delete(userId);
           disconnectedUser = userId;
         }
-
         break;
       }
-
     }
 
     if (disconnectedUser) {
-
       socket.broadcast.emit("user_offline", disconnectedUser);
-      console.log("User offline:", disconnectedUser);
-
     }
 
     console.log("Socket Disconnected:", socket.id);
-
   });
-
 });
 
 // ================= API ROUTES =================
