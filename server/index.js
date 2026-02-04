@@ -25,8 +25,9 @@ const app = express();
 // ✅ Allow Netlify + localhost
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://cybergram-frontend.netlify.app"
+  "https://cybergram-frotnend.netlify.app"
 ];
+
 
 app.use(
   cors({
