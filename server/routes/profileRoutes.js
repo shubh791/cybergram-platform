@@ -1,5 +1,4 @@
 import express from "express";
-import multer from "multer";
 
 import {
   getUserProfile,
@@ -12,33 +11,9 @@ import {
 
 import verifyToken from "../middleware/authMiddleware.js";
 import optionalAuth from "../middleware/optionalAuth.js";
+import upload from "../middleware/uploadMiddleware.js"; // ✅ MEMORY MULTER
 
 const router = express.Router();
-
-
-// ================= MULTER CONFIG =================
-
-const storage = multer.diskStorage({
-
-  destination: (req, file, cb) => {
-    cb(null, "uploads");
-  },
-
-  filename: (req, file, cb) => {
-
-    const uniqueName =
-      Date.now() + "-" +
-      Math.round(Math.random() * 1e9) + "-" +
-      file.originalname;
-
-    cb(null, uniqueName);
-
-  }
-
-});
-
-const upload = multer({ storage });
-
 
 // ================= STATIC ROUTES =================
 
@@ -48,7 +23,7 @@ router.get("/saved/me", verifyToken, getSavedPosts);
 // Update bio
 router.put("/edit/bio", verifyToken, updateBio);
 
-// Upload avatar
+// Upload avatar (CLOUDINARY)
 router.put(
   "/edit/avatar",
   verifyToken,
@@ -57,10 +32,7 @@ router.put(
 );
 
 // ================= DELETE ACCOUNT =================
-// Secure password + FK safe + transaction protected
-
 router.delete("/delete/me", verifyToken, deleteMyAccount);
-
 
 // ================= DYNAMIC ROUTES =================
 

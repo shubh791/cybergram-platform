@@ -168,3 +168,38 @@ export const deletePost = async (req, res) => {
     res.status(500).json({ message: "Failed to delete post" });
   }
 };
+// ================= GET SAVED POSTS =================
+
+export const getSavedPosts = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const saved = await prisma.save.findMany({
+      where: { userId },
+      include: {
+        post: {
+          include: {
+            user: {
+              select: {
+                username: true,
+                avatar: true
+              }
+            },
+            likes: true,
+            comments: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: "desc"
+      }
+    });
+
+    const posts = saved.map(item => item.post);
+    res.json(posts);
+
+  } catch (error) {
+    console.log("SAVED ERROR:", error);
+    res.status(500).json({ message: "Saved fetch failed" });
+  }
+};
