@@ -24,6 +24,7 @@ export const createPost = async (req, res) => {
 
     // 🔥 UPLOAD IMAGES TO CLOUDINARY
     const imageUrls = [];
+    const imagePublicIds = [];
 
     if (Array.isArray(req.files)) {
       for (const file of req.files) {
@@ -33,7 +34,9 @@ export const createPost = async (req, res) => {
             folder: "cybergram/posts",
           }
         );
+
         imageUrls.push(result.secure_url);
+        imagePublicIds.push(result.public_id);
       }
     }
 
@@ -41,7 +44,8 @@ export const createPost = async (req, res) => {
       data: {
         caption,
         category,
-        images: imageUrls, // ✅ FULL HTTPS URLS
+        images: imageUrls,          // ✅ for frontend
+        imagePublicIds,              // ✅ for delete
         userId,
       },
       include: {
@@ -59,6 +63,7 @@ export const createPost = async (req, res) => {
     });
 
     res.status(201).json(post);
+
   } catch (error) {
     console.error("POST CREATE ERROR:", error);
     res.status(500).json({ message: "Post creation failed" });
@@ -112,6 +117,7 @@ export const getPosts = async (req, res) => {
     }));
 
     res.json(updatedPosts);
+
   } catch (error) {
     console.error("FEED ERROR:", error);
     res.status(500).json({ message: "Feed fetch failed" });
@@ -119,7 +125,7 @@ export const getPosts = async (req, res) => {
 };
 
 /* ================================
-   DELETE POST
+   DELETE POST (WITH CLOUDINARY CLEANUP)
 ================================ */
 
 export const deletePost = async (req, res) => {
@@ -141,6 +147,13 @@ export const deletePost = async (req, res) => {
       });
     }
 
+    // 🔥 DELETE IMAGES FROM CLOUDINARY
+    if (Array.isArray(post.imagePublicIds)) {
+      for (const publicId of post.imagePublicIds) {
+        await cloudinary.uploader.destroy(publicId);
+      }
+    }
+
     await prisma.post.delete({
       where: { id: postId },
     });
@@ -149,6 +162,7 @@ export const deletePost = async (req, res) => {
       success: true,
       message: "Post deleted successfully",
     });
+
   } catch (error) {
     console.error("DELETE POST ERROR:", error);
     res.status(500).json({ message: "Failed to delete post" });

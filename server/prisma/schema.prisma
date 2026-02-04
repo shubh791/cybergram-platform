@@ -16,6 +16,8 @@ model User {
 
   avatar String?
   bio    String?
+  avatarPublicId String?
+
 
   posts    Post[]
   comments Comment[]
@@ -40,15 +42,15 @@ model Post {
   id Int @id @default(autoincrement())
 
   caption  String?
-  images   String[]
+  images   String[]          // secure_url
+  imagePublicIds String[]    // 👈 ADD THIS
   category String
 
   verified  Boolean @default(false)
   flagCount Int     @default(0)
 
   userId Int
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   comments Comment[]
   likes    Like[]
