@@ -5,9 +5,7 @@ import prisma from "../config/prismaClient.js";
 ================================ */
 
 export const createPost = async (req, res) => {
-
   try {
-
     if (!req.user || !req.user.id) {
       return res.status(401).json({ message: "Unauthorized user" });
     }
@@ -15,8 +13,8 @@ export const createPost = async (req, res) => {
     const { caption, category } = req.body;
     const userId = req.user.id;
 
-    // Uploaded images
-    const uploadedImages = req.files
+    // ✅ SAFE uploaded images handling (FIX)
+    const uploadedImages = Array.isArray(req.files)
       ? req.files.map(file => file.filename)
       : [];
 
@@ -30,14 +28,12 @@ export const createPost = async (req, res) => {
     }
 
     const post = await prisma.post.create({
-
       data: {
         caption,
         category,
         images: uploadedImages,
         userId
       },
-
       include: {
         user: {
           select: {
@@ -50,35 +46,24 @@ export const createPost = async (req, res) => {
         comments: true,
         saves: true
       }
-
     });
 
     res.status(201).json(post);
 
   } catch (error) {
-
     console.error("POST CREATE ERROR:", error);
-
     res.status(500).json({ message: error.message });
-
   }
-
 };
-
 
 /* ================================
    FETCH FEED POSTS (WITH CATEGORY)
 ================================ */
 
 export const getPosts = async (req, res) => {
-
   try {
-
     const userId = req.user.id;
-
     const { category } = req.query;
-
-    // ================= CATEGORY FILTER =================
 
     const filter = {};
 
@@ -86,16 +71,11 @@ export const getPosts = async (req, res) => {
       filter.category = category;
     }
 
-    // ================= FETCH POSTS =================
-
     const posts = await prisma.post.findMany({
-
       where: filter,
-
       orderBy: {
         createdAt: "desc"
       },
-
       include: {
         user: {
           select: {
@@ -108,10 +88,7 @@ export const getPosts = async (req, res) => {
         comments: true,
         saves: true
       }
-
     });
-
-    // ================= FOLLOW STATUS =================
 
     const follows = await prisma.follow.findMany({
       where: {
@@ -135,26 +112,17 @@ export const getPosts = async (req, res) => {
     res.json(updatedPosts);
 
   } catch (error) {
-
     console.log("FEED ERROR:", error);
-
-    res.status(500).json({
-      message: "Feed fetch failed"
-    });
-
+    res.status(500).json({ message: "Feed fetch failed" });
   }
-
 };
-
 
 /* ================================
    DELETE POST (OWNER ONLY)
 ================================ */
 
 export const deletePost = async (req, res) => {
-
   try {
-
     const postId = Number(req.params.id);
     const userId = req.user.id;
 
@@ -182,13 +150,7 @@ export const deletePost = async (req, res) => {
     });
 
   } catch (error) {
-
     console.error("DELETE POST ERROR:", error);
-
-    res.status(500).json({
-      message: "Failed to delete post"
-    });
-
+    res.status(500).json({ message: "Failed to delete post" });
   }
-
 };
