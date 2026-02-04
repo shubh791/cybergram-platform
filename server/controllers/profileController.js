@@ -62,6 +62,88 @@ export const getUserProfile = async (req, res) => {
   }
 };
 
+/* ================= GET USER POSTS ================= */
+
+export const getUserPosts = async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    const posts = await prisma.post.findMany({
+      where: { user: { username } },
+      include: {
+        user: {
+          select: {
+            username: true,
+            avatar: true
+          }
+        },
+        likes: true,
+        comments: true
+      },
+      orderBy: { createdAt: "desc" }
+    });
+
+    res.json(posts);
+
+  } catch (error) {
+    console.log("POST ERROR:", error);
+    res.status(500).json({ message: "Posts fetch failed" });
+  }
+};
+
+/* ================= GET SAVED POSTS ================= */
+
+export const getSavedPosts = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const saved = await prisma.save.findMany({
+      where: { userId },
+      include: {
+        post: {
+          include: {
+            user: {
+              select: {
+                username: true,
+                avatar: true
+              }
+            },
+            likes: true,
+            comments: true
+          }
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    });
+
+    const posts = saved.map(item => item.post);
+    res.json(posts);
+
+  } catch (error) {
+    console.log("SAVED ERROR:", error);
+    res.status(500).json({ message: "Saved fetch failed" });
+  }
+};
+
+/* ================= UPDATE BIO ================= */
+
+export const updateBio = async (req, res) => {
+  try {
+    const { bio } = req.body;
+
+    const updated = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { bio }
+    });
+
+    res.json(updated);
+
+  } catch (error) {
+    console.log("BIO ERROR:", error);
+    res.status(500).json({ message: "Bio update failed" });
+  }
+};
+
 /* ================= UPDATE AVATAR (CLOUDINARY) ================= */
 
 export const updateAvatar = async (req, res) => {
@@ -74,12 +156,10 @@ export const updateAvatar = async (req, res) => {
       where: { id: req.user.id }
     });
 
-    // 🔥 DELETE OLD AVATAR FROM CLOUDINARY (if exists)
     if (user?.avatarPublicId) {
       await cloudinary.uploader.destroy(user.avatarPublicId);
     }
 
-    // 🔥 UPLOAD NEW AVATAR
     const uploadResult = await cloudinary.uploader.upload(
       `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`,
       {
@@ -96,9 +176,7 @@ export const updateAvatar = async (req, res) => {
       }
     });
 
-    res.json({
-      avatar: updated.avatar
-    });
+    res.json({ avatar: updated.avatar });
 
   } catch (error) {
     console.log("AVATAR ERROR:", error);
@@ -130,38 +208,28 @@ export const deleteMyAccount = async (req, res) => {
       return res.status(401).json({ message: "Incorrect password" });
     }
 
-    // 🔥 DELETE AVATAR FROM CLOUDINARY
     if (user.avatarPublicId) {
       await cloudinary.uploader.destroy(user.avatarPublicId);
     }
 
     await prisma.$transaction([
       prisma.notification.deleteMany({
-        where: {
-          OR: [{ senderId: userId }, { receiverId: userId }]
-        }
+        where: { OR: [{ senderId: userId }, { receiverId: userId }] }
       }),
       prisma.message.deleteMany({
-        where: {
-          OR: [{ senderId: userId }, { receiverId: userId }]
-        }
+        where: { OR: [{ senderId: userId }, { receiverId: userId }] }
       }),
       prisma.like.deleteMany({ where: { userId } }),
       prisma.comment.deleteMany({ where: { userId } }),
       prisma.follow.deleteMany({
-        where: {
-          OR: [{ followerId: userId }, { followingId: userId }]
-        }
+        where: { OR: [{ followerId: userId }, { followingId: userId }] }
       }),
       prisma.save.deleteMany({ where: { userId } }),
       prisma.post.deleteMany({ where: { userId } }),
       prisma.user.delete({ where: { id: userId } })
     ]);
 
-    res.json({
-      success: true,
-      message: "Account deleted permanently"
-    });
+    res.json({ success: true, message: "Account deleted permanently" });
 
   } catch (error) {
     console.log("DELETE ACCOUNT ERROR:", error);
