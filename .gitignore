@@ -42,8 +42,6 @@ server/prisma/migrations/
 # UPLOADS (USER FILES)
 #################################
 
-server/uploads/
-
 #################################
 # CACHE & TEMP
 #################################
