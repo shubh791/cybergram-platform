@@ -1,4 +1,4 @@
-import prisma from "../config/prismaclient.js";
+import prisma from "../config/prismaClient.js";
 
 /* ===============================
    SEND MESSAGE
