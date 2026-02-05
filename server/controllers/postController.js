@@ -2,7 +2,7 @@ import prisma from "../config/prismaClient.js";
 import cloudinary from "../config/cloudinary.js";
 
 /* ================================
-   CREATE POST (CLOUDINARY SAFE)
+   CREATE POST (NO CHANGE)
 ================================ */
 
 export const createPost = async (req, res) => {
@@ -22,7 +22,6 @@ export const createPost = async (req, res) => {
       return res.status(400).json({ message: "Post cannot be empty" });
     }
 
-    // 🔥 Upload to Cloudinary
     const imageUrls = [];
     const imagePublicIds = [];
 
@@ -43,7 +42,7 @@ export const createPost = async (req, res) => {
         caption,
         category,
         images: imageUrls,
-        imagePublicIds, // ✅ Ensure Prisma schema has this field
+        imagePublicIds,
         userId
       },
       include: {
@@ -69,7 +68,7 @@ export const createPost = async (req, res) => {
 };
 
 /* ================================
-   FETCH POSTS
+   FETCH POSTS (NO CHANGE)
 ================================ */
 
 export const getPosts = async (req, res) => {
@@ -123,7 +122,7 @@ export const getPosts = async (req, res) => {
 };
 
 /* ================================
-   DELETE POST + CLOUDINARY CLEANUP
+   DELETE POST (FIXED ONLY)
 ================================ */
 
 export const deletePost = async (req, res) => {
@@ -145,14 +144,14 @@ export const deletePost = async (req, res) => {
       });
     }
 
-    // 🔥 Delete from Cloudinary safely
-    if (Array.isArray(post.imagePublicIds)) {
-      for (const publicId of post.imagePublicIds) {
-        try {
-          await cloudinary.uploader.destroy(publicId);
-        } catch {
-          console.log("Cloudinary delete skipped");
-        }
+    // ✅ SAFE CLOUDINARY DELETE
+    const publicIds = post.imagePublicIds || [];
+
+    for (const publicId of publicIds) {
+      try {
+        await cloudinary.uploader.destroy(publicId);
+      } catch {
+        console.log("Cloudinary delete skipped");
       }
     }
 
@@ -160,9 +159,10 @@ export const deletePost = async (req, res) => {
       where: { id: postId }
     });
 
+    // ⭐ IMPORTANT CHANGE
     res.json({
       success: true,
-      message: "Post deleted successfully"
+      postId
     });
 
   } catch (error) {
@@ -171,7 +171,8 @@ export const deletePost = async (req, res) => {
   }
 };
 
-/* ================= SAVED POSTS ================= */
+/* ================= SAVED POSTS (NO CHANGE)
+================================ */
 
 export const getSavedPosts = async (req, res) => {
   try {
