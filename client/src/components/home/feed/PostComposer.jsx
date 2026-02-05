@@ -7,7 +7,6 @@ import ImageCropModal from "./ImageCropModal";
 
 export default function PostComposer({ onPostSuccess }) {
 
-
   const [caption, setCaption] = useState("");
   const [category, setCategory] = useState("");
   const [images, setImages] = useState([]);
@@ -81,26 +80,18 @@ export default function PostComposer({ onPostSuccess }) {
       formData.append("category", category);
 
       images.forEach(file => {
-        formData.append("images", file);
+        // ✅ FIX: Proper file append
+        formData.append("images", file, file.name || "image.jpg");
       });
 
-      await axios.post(
-        "/posts",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data"
-          }
-        }
-      );
+      // ✅ FIX: DO NOT manually set Content-Type
+      await axios.post("/posts", formData);
 
       // Reset UI
-     setCaption("");
-setImages([]);
-setCategory("");
-onPostSuccess();
-
-
+      setCaption("");
+      setImages([]);
+      setCategory("");
+      onPostSuccess();
 
     } catch (error) {
 
