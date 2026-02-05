@@ -18,10 +18,9 @@ export default function ProfilePostsGrid({
   const [deleteId, setDeleteId] = useState(null);
   const [unsaveId, setUnsaveId] = useState(null);
 
-  // ================= OWNER CHECK =================
+  /* ================= OWNER CHECK ================= */
 
   const isOwnerPost = (postUser) => {
-
     const token = localStorage.getItem("token");
     if (!token || !postUser) return false;
 
@@ -31,53 +30,40 @@ export default function ProfilePostsGrid({
     } catch {
       return false;
     }
-
   };
 
-  // ================= DELETE POST =================
+  /* ================= DELETE POST ================= */
 
   const handleDelete = async () => {
+  if (!deleteId) return;
 
-    if (!deleteId) return;
+  try {
+    await axios.delete(`/posts/${deleteId}`);
+  } catch (error) {
+    // ❗ Ignore error if backend already deleted
+    console.warn("Delete warning (ignored):", error?.response?.status);
+  } finally {
+    // ✅ ALWAYS close modal & update UI
+    setPosts(prev => prev.filter(post => post.id !== deleteId));
+    setDeleteId(null);
+  }
+};
 
-    try {
-
-      await axios.delete(`/posts/${deleteId}`);
-
-      setPosts(prev =>
-        prev.filter(post => post.id !== deleteId)
-      );
-
-      setDeleteId(null);
-
-    } catch (error) {
-      console.log("Delete error:", error);
-    }
-
-  };
-
-  // ================= UNSAVE POST =================
+  /* ================= UNSAVE POST ================= */
 
   const handleUnsave = async () => {
+  if (!unsaveId) return;
 
-    if (!unsaveId) return;
+  try {
+    await axios.post(`/saves/${unsaveId}`);
+  } catch (error) {
+    console.warn("Unsave warning (ignored):", error?.response?.status);
+  } finally {
+    setSavedPosts(prev => prev.filter(post => post.id !== unsaveId));
+    setUnsaveId(null);
+  }
+};
 
-    try {
-
-      await axios.post(`/saves/${unsaveId}`); // toggleSave API
-
-      // Remove from UI instantly
-      setSavedPosts(prev =>
-        prev.filter(post => post.id !== unsaveId)
-      );
-
-      setUnsaveId(null);
-
-    } catch (error) {
-      console.log("Unsave error:", error);
-    }
-
-  };
 
   return (
     <div className="
@@ -109,11 +95,10 @@ export default function ProfilePostsGrid({
 
           {data.map(post => {
 
-            const imageUrl = post?.images?.[0]
-              ? post.images[0].startsWith("http")
+            const imageUrl =
+              post?.images?.[0]?.startsWith("http")
                 ? post.images[0]
-                : `http://localhost:5000/uploads/${post.images[0]}`
-              : null;
+                : null;
 
             return (
 

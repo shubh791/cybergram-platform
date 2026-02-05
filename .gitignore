@@ -36,7 +36,7 @@ server/node_modules/
 
 server/prisma/dev.db
 server/prisma/dev.db-journal
-server/prisma/migrations/
+
 
 #################################
 # UPLOADS (USER FILES)
