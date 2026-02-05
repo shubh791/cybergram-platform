@@ -35,35 +35,41 @@ export default function ProfilePostsGrid({
   /* ================= DELETE POST ================= */
 
   const handleDelete = async () => {
-  if (!deleteId) return;
+    if (!deleteId) return;
 
-  try {
-    await axios.delete(`/posts/${deleteId}`);
-  } catch (error) {
-    // ❗ Ignore error if backend already deleted
-    console.warn("Delete warning (ignored):", error?.response?.status);
-  } finally {
-    // ✅ ALWAYS close modal & update UI
-    setPosts(prev => prev.filter(post => post.id !== deleteId));
-    setDeleteId(null);
-  }
-};
+    try {
+      await axios.delete(`/posts/${deleteId}`);
+    } catch (error) {
+      console.warn("Delete warning:", error?.response?.status);
+    } finally {
+
+      // ✅ Remove instantly from BOTH states
+      setPosts(prev => prev.filter(p => p.id !== deleteId));
+      setSavedPosts(prev => prev.filter(p => p.id !== deleteId));
+
+      // ✅ Always close modal
+      setDeleteId(null);
+    }
+  };
 
   /* ================= UNSAVE POST ================= */
 
   const handleUnsave = async () => {
-  if (!unsaveId) return;
+    if (!unsaveId) return;
 
-  try {
-    await axios.post(`/saves/${unsaveId}`);
-  } catch (error) {
-    console.warn("Unsave warning (ignored):", error?.response?.status);
-  } finally {
-    setSavedPosts(prev => prev.filter(post => post.id !== unsaveId));
-    setUnsaveId(null);
-  }
-};
+    try {
+      await axios.post(`/saves/${unsaveId}`);
+    } catch (error) {
+      console.warn("Unsave warning:", error?.response?.status);
+    } finally {
 
+      // ✅ Remove instantly from saved UI
+      setSavedPosts(prev => prev.filter(p => p.id !== unsaveId));
+
+      // ✅ Always close modal
+      setUnsaveId(null);
+    }
+  };
 
   return (
     <div className="
