@@ -1,19 +1,15 @@
 import { useState } from "react";
 
-import HomeHeader from "../../components/home/HomeHeader";
 import CyberNewsPanel from "../../components/home/CyberNewsPanel";
 import FeedPanel from "../../components/home/feed/FeedPanel";
 import HelpPanel from "../../components/home/HelpPanel";
 import CategoryTabs from "../../components/home/feed/CategoryTabs";
 
 export default function Home() {
- const [activeCategory, setActiveCategory] = useState("All");
+  const [activeCategory, setActiveCategory] = useState("All");
 
   return (
     <div className="min-h-screen bg-[#050b14]">
-
-      {/* HEADER */}
-      <HomeHeader />
 
       {/* CATEGORY FILTER */}
       <div className="
@@ -23,10 +19,9 @@ export default function Home() {
         mx-auto
       ">
         <CategoryTabs
-  activeCategory={activeCategory}
-  setActiveCategory={setActiveCategory}
-/>
-
+          activeCategory={activeCategory}
+          setActiveCategory={setActiveCategory}
+        />
       </div>
 
       {/* MAIN GRID */}
@@ -41,33 +36,18 @@ export default function Home() {
         mx-auto
       ">
 
-        {/* LEFT PANEL (DESKTOP ONLY) */}
-        <div className="
-          hidden
-          lg:block
-          lg:col-span-3
-          order-1
-        ">
+        {/* LEFT PANEL */}
+        <div className="hidden lg:block lg:col-span-3">
           <CyberNewsPanel />
         </div>
 
         {/* FEED CENTER */}
-        <div className="
-          col-span-1
-          lg:col-span-6
-          order-2
-        ">
+        <div className="col-span-1 lg:col-span-6">
           <FeedPanel activeCategory={activeCategory} />
-
         </div>
 
-        {/* RIGHT PANEL (DESKTOP ONLY) */}
-        <div className="
-          hidden
-          lg:block
-          lg:col-span-3
-          order-3
-        ">
+        {/* RIGHT PANEL */}
+        <div className="hidden lg:block lg:col-span-3">
           <HelpPanel />
         </div>
 
