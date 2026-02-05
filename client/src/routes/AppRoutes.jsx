@@ -22,6 +22,8 @@ import ChatPage from "../pages/chat/ChatPage";
 
 import HomeHeader from "../components/home/HomeHeader";
 import ProtectedRoute from "./ProtectedRoute";
+import PublicRoute from "./PublicRoute";
+
 
 // ================= HEADER CONTROL =================
 
@@ -30,7 +32,7 @@ function ProtectedLayout() {
   const location = useLocation();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  // ✅ FIX: reactive screen size
+  // reactive screen size
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -62,23 +64,60 @@ function ProtectedLayout() {
   );
 }
 
+
 // ================= ROUTES =================
 
 export default function AppRoutes() {
+
   return (
+
     <Routes>
 
-      {/* PUBLIC */}
-      <Route path="/" element={<Landing />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
-      <Route path="/about-us" element={<AboutPage />} />
+      {/* PUBLIC ROUTES BLOCKED WHEN LOGGED IN */}
+
+      <Route
+        path="/"
+        element={
+          <PublicRoute>
+            <Landing />
+          </PublicRoute>
+        }
+      />
+
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        }
+      />
+
+      <Route
+        path="/signup"
+        element={
+          <PublicRoute>
+            <Signup />
+          </PublicRoute>
+        }
+      />
+
+      <Route
+        path="/about-us"
+        element={
+          <PublicRoute>
+            <AboutPage />
+          </PublicRoute>
+        }
+      />
 
       {/* LEGAL */}
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<TermsPage />} />
 
-      {/* PROTECTED */}
+
+      {/* PROTECTED ROUTES */}
+
       <Route
         element={
           <ProtectedRoute>
@@ -95,9 +134,11 @@ export default function AppRoutes() {
         <Route path="/help/:state" element={<CityPage />} />
       </Route>
 
+
       {/* FALLBACK */}
       <Route path="*" element={<Login />} />
 
     </Routes>
+
   );
 }
