@@ -7,6 +7,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ================= USER =================
+
 model User {
   id       Int    @id @default(autoincrement())
   name     String
@@ -14,10 +16,9 @@ model User {
   email    String @unique
   password String
 
-  avatar String?
-  bio    String?
+  avatar         String?
+  bio            String?
   avatarPublicId String?
-
 
   posts    Post[]
   comments Comment[]
@@ -27,23 +28,24 @@ model User {
   followers Follow[] @relation("followers")
   following Follow[] @relation("following")
 
-  // Notifications
   sentNotifications     Notification[] @relation("sender")
   receivedNotifications Notification[] @relation("receiver")
 
-  // Chat relations
   sentMessages     Message[] @relation("MessageSender")
   receivedMessages Message[] @relation("MessageReceiver")
 
   createdAt DateTime @default(now())
 }
 
+// ================= POST =================
+
 model Post {
   id Int @id @default(autoincrement())
 
-  caption  String?
-  images   String[]          // secure_url
-  imagePublicIds String[]    // 👈 ADD THIS
+  caption        String?
+  images         String[]
+  imagePublicIds String[] @default([])
+
   category String
 
   verified  Boolean @default(false)
@@ -63,20 +65,21 @@ model Post {
   @@index([createdAt])
 }
 
+// ================= COMMENT =================
+
 model Comment {
   id   Int    @id @default(autoincrement())
   text String
 
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId Int
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
 
-  parent   Comment? @relation("Replies", fields: [parentId], references: [id])
   parentId Int?
-
-  replies Comment[] @relation("Replies")
+  parent   Comment?  @relation("Replies", fields: [parentId], references: [id])
+  replies  Comment[] @relation("Replies")
 
   createdAt DateTime @default(now())
 
@@ -84,20 +87,24 @@ model Comment {
   @@index([userId])
 }
 
+// ================= LIKE =================
+
 model Like {
   id Int @id @default(autoincrement())
 
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId Int
-
-  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
   @@unique([userId, postId])
   @@index([postId])
 }
+
+// ================= SAVE =================
 
 model Save {
   id Int @id @default(autoincrement())
@@ -114,6 +121,8 @@ model Save {
   @@index([postId])
 }
 
+// ================= FOLLOW =================
+
 model Follow {
   id Int @id @default(autoincrement())
 
@@ -129,11 +138,14 @@ model Follow {
   @@index([followingId])
 }
 
+// ================= NOTIFICATION =================
+
 model Notification {
-  id         Int      @id @default(autoincrement())
-  type       String
-  message    String
-  read       Boolean  @default(false)
+  id Int @id @default(autoincrement())
+
+  type    String
+  message String
+  read    Boolean @default(false)
 
   senderId   Int
   receiverId Int
@@ -145,6 +157,8 @@ model Notification {
   createdAt DateTime @default(now())
 }
 
+// ================= MESSAGE / CHAT =================
+
 model Message {
   id Int @id @default(autoincrement())
 
@@ -152,9 +166,8 @@ model Message {
   receiverId Int
 
   content String
-
-  status String @default("sent")
-  read   Boolean @default(false)
+  status  String  @default("sent")
+  read    Boolean @default(false)
 
   deletedBySender   Boolean @default(false)
   deletedByReceiver Boolean @default(false)
@@ -164,4 +177,3 @@ model Message {
 
   createdAt DateTime @default(now())
 }
-
