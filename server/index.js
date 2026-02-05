@@ -20,25 +20,19 @@ dotenv.config();
 
 const app = express();
 
-// ================= MIDDLEWARE =================
+// ================= CORS =================
 
-// ✅ Allow Netlify + localhost
 const allowedOrigins = [
   "http://localhost:5173",
   "https://cybergram-frotnend.netlify.app"
 ];
 
-
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true
-  })
-);
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
 
 app.use(express.json());
-
-// Serve uploaded images
 app.use("/uploads", express.static("uploads"));
 
 // ================= SOCKET SETUP =================
@@ -48,24 +42,31 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
-    methods: ["GET", "POST"],
     credentials: true
-  }
+  },
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
 
-// Make socket available inside controllers
+// Make socket available globally
 app.set("io", io);
 
-// ================= ONLINE USERS MAP =================
+// ================= ONLINE USERS =================
 
 const onlineUsers = new Map();
 
 // ================= SOCKET EVENTS =================
 
 io.on("connection", (socket) => {
+
   console.log("Socket Connected:", socket.id);
 
+  /* ================= JOIN ROOM ================= */
+
   socket.on("join", (userId) => {
+
+    if (!userId) return;
+
     const roomId = String(userId);
     socket.join(roomId);
 
@@ -76,38 +77,59 @@ io.on("connection", (socket) => {
     onlineUsers.get(roomId).add(socket.id);
 
     const onlineList = Array.from(onlineUsers.keys());
-    socket.emit("online_users", onlineList);
+
+    // send updated list to all clients
+    io.emit("online_users", onlineList);
+
     socket.broadcast.emit("user_online", roomId);
   });
 
+  /* ================= MESSAGE SEEN ================= */
+
   socket.on("message_seen", ({ senderId, messageId }) => {
+
     if (!senderId || !messageId) return;
-    io.to(String(senderId)).emit("message_seen_update", { messageId });
+
+    io.to(String(senderId)).emit("message_seen_update", {
+      messageId
+    });
+
   });
 
+  /* ================= DISCONNECT ================= */
+
   socket.on("disconnect", () => {
+
     let disconnectedUser = null;
 
     for (let [userId, socketSet] of onlineUsers.entries()) {
+
       if (socketSet.has(socket.id)) {
+
         socketSet.delete(socket.id);
+
         if (socketSet.size === 0) {
           onlineUsers.delete(userId);
           disconnectedUser = userId;
         }
+
         break;
       }
     }
 
     if (disconnectedUser) {
+
+      io.emit("online_users", Array.from(onlineUsers.keys()));
       socket.broadcast.emit("user_offline", disconnectedUser);
+
     }
 
     console.log("Socket Disconnected:", socket.id);
   });
+
 });
 
-// ================= API ROUTES =================
+// ================= ROUTES =================
 
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);

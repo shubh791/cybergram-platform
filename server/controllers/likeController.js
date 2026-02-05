@@ -27,23 +27,16 @@ export const toggleLike = async (req, res) => {
     if (existingLike) {
 
       await prisma.like.delete({
-        where: {
-          id: existingLike.id
-        }
+        where: { id: existingLike.id }
       });
 
-      return res.json({
-        liked: false
-      });
+      return res.json({ liked: false });
     }
 
     /* ================= LIKE ================= */
 
     await prisma.like.create({
-      data: {
-        userId,
-        postId
-      }
+      data: { userId, postId }
     });
 
     /* ================= GET POST OWNER ================= */
@@ -53,7 +46,6 @@ export const toggleLike = async (req, res) => {
       select: { userId: true }
     });
 
-    // SAFETY CHECK
     if (!post) {
       return res.json({ liked: true });
     }
@@ -73,33 +65,47 @@ export const toggleLike = async (req, res) => {
       select: { username: true }
     });
 
-    if (!liker || !io) {
+    if (!liker) {
       return res.json({ liked: true });
     }
 
-    /* ================= SAVE NOTIFICATION (NEW) ================= */
+    /* ================= REMOVE OLD LIKE NOTIFICATIONS ================= */
 
-    await prisma.notification.create({
+    await prisma.notification.deleteMany({
+      where: {
+        type: "like",
+        senderId: userId,
+        receiverId: postOwnerId,
+        postId
+      }
+    });
+
+    /* ================= SAVE NOTIFICATION ================= */
+
+    const notification = await prisma.notification.create({
       data: {
         type: "like",
         message: `@${liker.username} liked your post`,
         senderId: userId,
         receiverId: postOwnerId,
-        postId: postId
+        postId
       }
     });
 
-    /* ================= SOCKET NOTIFICATION (EXISTING) ================= */
+    /* ================= SOCKET NOTIFICATION ================= */
 
-    io.to(String(postOwnerId)).emit("notification", {
-      type: "like",
-      fromUsername: liker.username,
-      message: `@${liker.username} liked your post`
-    });
+    if (io) {
+      io.to(String(postOwnerId)).emit("notification", {
+        id: notification.id,
+        type: "like",
+        fromUsername: liker.username,
+        message: notification.message,
+        postId,
+        createdAt: notification.createdAt
+      });
+    }
 
-    res.json({
-      liked: true
-    });
+    res.json({ liked: true });
 
   } catch (error) {
 

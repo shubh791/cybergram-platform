@@ -13,9 +13,9 @@ export const SocketProvider = ({ children }) => {
   const unreadCtx = useContext(ChatUnreadContext);
   const { addOnline, removeOnline, setBulkOnline } = useContext(OnlineContext);
 
+  // ✅ FIX: remove invalid text + prevent stale closure
   const incrementRef = useRef(unreadCtx.increment);
 
-  // Prevent stale closure
   useEffect(() => {
     incrementRef.current = unreadCtx.increment;
   }, [unreadCtx.increment]);
@@ -71,26 +71,20 @@ export const SocketProvider = ({ children }) => {
     /* ================= CHAT UNREAD ================= */
 
     const handleNewMessage = (data) => {
-
       if (!data?.senderId) return;
-
       incrementRef.current(data.senderId);
-
     };
 
     socket.on("new_message", handleNewMessage);
 
-    /* ================= 🔥 GLOBAL NOTIFICATION RELAY ================= */
+    /* ================= GLOBAL NOTIFICATION RELAY ================= */
 
     const handleNotification = (data) => {
-
-      // Forward to UI globally (works on chat page too)
       window.dispatchEvent(
         new CustomEvent("newNotification", {
           detail: data
         })
       );
-
     };
 
     socket.on("notification", handleNotification);
@@ -110,6 +104,7 @@ export const SocketProvider = ({ children }) => {
 
       socket.off("notification", handleNotification);
 
+      // ❗ DO NOT disconnect socket here (keeps online stable)
     };
 
   }, []);

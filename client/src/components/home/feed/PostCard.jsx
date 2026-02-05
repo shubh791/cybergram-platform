@@ -114,13 +114,6 @@ export default function PostCard({ post }) {
     );
   };
 
-  /* ================= COMMENT HANDLER ================= */
-  const handleNewComment = () => {
-    setCommentCount(p => p + 1);
-    setCommentAnim(true);
-    setTimeout(() => setCommentAnim(false), 200);
-  };
-
   const goProfile = () => {
     navigate(`/profile/${post.user.username}`);
   };
@@ -201,6 +194,9 @@ export default function PostCard({ post }) {
             className={`transition ${likeAnim ? "scale-125" : "scale-100"}`}
           >
             {liked ? <FavoriteIcon className="text-pink-500" /> : <FavoriteBorderIcon />}
+            <span className="ml-1 text-xs">
+              {likeCount} {likeCount === 1 ? "like" : "likes"}
+            </span>
           </button>
 
           <button
@@ -208,7 +204,9 @@ export default function PostCard({ post }) {
             className={`transition ${commentAnim ? "scale-125" : "scale-100"}`}
           >
             <ChatBubbleOutlineIcon />
-            <span className="ml-1 text-xs">{commentCount}</span>
+            <span className="ml-1 text-xs">
+              {commentCount} {commentCount === 1 ? "comment" : "comments"}
+            </span>
           </button>
         </div>
 
@@ -231,7 +229,11 @@ export default function PostCard({ post }) {
       {showComments && (
         <CommentBox
           postId={post.id}
-          onNewComment={handleNewComment}
+          onCountChange={(count) => {
+            setCommentCount(count);
+            setCommentAnim(true);
+            setTimeout(() => setCommentAnim(false), 200);
+          }}
         />
       )}
     </div>

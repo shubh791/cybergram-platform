@@ -20,19 +20,17 @@ export default function PostComposer({ onPostSuccess }) {
     ? caption.trim().split(/\s+/).length
     : 0;
 
-  // ================= IMAGE PICK =================
+  /* ================= IMAGE PICK ================= */
 
   const handleImagePick = (e) => {
-
     const file = e.target.files[0];
     if (!file) return;
 
     const previewUrl = URL.createObjectURL(file);
     setCropImage(previewUrl);
-
   };
 
-  // ================= AFTER CROP =================
+  /* ================= AFTER CROP ================= */
 
   const handleCropDone = (croppedFile) => {
 
@@ -43,20 +41,17 @@ export default function PostComposer({ onPostSuccess }) {
 
     setImages(prev => [...prev, croppedFile]);
     setCropImage(null);
-
   };
 
-  // ================= REMOVE IMAGE =================
+  /* ================= REMOVE IMAGE ================= */
 
   const removeImage = (index) => {
-
     const updated = [...images];
     updated.splice(index, 1);
     setImages(updated);
-
   };
 
-  // ================= POST =================
+  /* ================= POST ================= */
 
   const handlePost = async () => {
 
@@ -80,41 +75,35 @@ export default function PostComposer({ onPostSuccess }) {
       formData.append("category", category);
 
       images.forEach(file => {
-        // ✅ FIX: Proper file append
         formData.append("images", file, file.name || "image.jpg");
       });
 
-      // ✅ FIX: DO NOT manually set Content-Type
       await axios.post("/posts", formData);
 
-      // Reset UI
       setCaption("");
       setImages([]);
       setCategory("");
       onPostSuccess();
 
     } catch (error) {
-
       console.error("POST ERROR:", error.response?.data || error.message);
       alert("Post failed");
-
     } finally {
       setLoading(false);
     }
-
   };
 
   return (
     <div className="
       border border-cyan-400/30
       rounded-xl
-      p-5
+      p-4 sm:p-5
       mb-6
       bg-[#050b14]
       shadow-[0_0_30px_rgba(0,255,255,0.08)]
     ">
 
-      {/* CATEGORY DROPDOWN */}
+      {/* CATEGORY */}
 
       <select
         value={category}
@@ -132,18 +121,18 @@ export default function PostComposer({ onPostSuccess }) {
         "
       >
         <option value="">Select Scam Category</option>
-
         {SCAM_CATEGORIES.map(cat => (
           <option key={cat}>{cat}</option>
         ))}
-
       </select>
 
       {/* IMAGE PREVIEW */}
 
       {images.length > 0 && (
 
-        <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="
+          grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4
+        ">
 
           {images.map((img, i) => (
 
@@ -151,7 +140,12 @@ export default function PostComposer({ onPostSuccess }) {
 
               <img
                 src={URL.createObjectURL(img)}
-                className="h-28 w-full object-cover rounded-lg border border-cyan-500/20"
+                className="
+                  h-24 sm:h-28
+                  w-full object-cover
+                  rounded-lg
+                  border border-cyan-500/20
+                "
                 alt="preview"
               />
 
@@ -161,7 +155,8 @@ export default function PostComposer({ onPostSuccess }) {
                   absolute top-2 right-2
                   bg-black/70 text-white
                   text-xs px-2 py-1 rounded-full
-                  opacity-0 group-hover:opacity-100
+                  opacity-100 sm:opacity-0
+                  sm:group-hover:opacity-100
                   transition
                 "
               >
@@ -176,7 +171,7 @@ export default function PostComposer({ onPostSuccess }) {
 
       )}
 
-      {/* TEXT AREA */}
+      {/* TEXTAREA */}
 
       <textarea
         value={caption}
@@ -197,18 +192,24 @@ export default function PostComposer({ onPostSuccess }) {
           resize-none
           text-sm
           text-white
-          min-h-[120px]
+          min-h-[110px]
+          sm:min-h-[120px]
           leading-relaxed
           mb-3
+          px-1
         "
       />
 
-      {/* FOOTER BAR */}
+      {/* FOOTER */}
 
-      <div className="flex justify-between items-center pt-2 border-t border-cyan-500/20">
+      <div className="
+        flex flex-col sm:flex-row
+        gap-3 sm:gap-0
+        justify-between items-start sm:items-center
+        pt-2 border-t border-cyan-500/20
+      ">
 
         <label className="text-cyan-400 text-sm cursor-pointer hover:underline">
-
           Add Image
           <input
             type="file"
@@ -216,7 +217,6 @@ export default function PostComposer({ onPostSuccess }) {
             hidden
             onChange={handleImagePick}
           />
-
         </label>
 
         <span className={`text-xs ${wordCount >= WORD_LIMIT ? "text-red-400" : "text-gray-400"}`}>
@@ -227,17 +227,16 @@ export default function PostComposer({ onPostSuccess }) {
           onClick={handlePost}
           disabled={loading}
           className="
+            w-full sm:w-auto
             bg-gradient-to-r from-cyan-500 to-blue-500
             px-5 py-2 rounded-lg
             text-sm font-semibold
             disabled:opacity-50
-            flex items-center gap-2
+            flex items-center justify-center gap-2
           "
         >
-
           {loading && <ClipLoader size={14} color="#000" />}
           Post
-
         </button>
 
       </div>
@@ -245,13 +244,11 @@ export default function PostComposer({ onPostSuccess }) {
       {/* CROP MODAL */}
 
       {cropImage && (
-
         <ImageCropModal
           image={cropImage}
           onCancel={() => setCropImage(null)}
           onCropDone={handleCropDone}
         />
-
       )}
 
     </div>

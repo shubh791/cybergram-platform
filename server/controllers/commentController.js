@@ -1,9 +1,8 @@
 import prisma from "../config/prismaClient.js";
 
-
-// ================================
-// GET COMMENTS
-// ================================
+/* ================================
+   GET COMMENTS
+================================ */
 
 export const getComments = async (req, res) => {
 
@@ -36,9 +35,9 @@ export const getComments = async (req, res) => {
 };
 
 
-// ================================
-// ADD COMMENT
-// ================================
+/* ================================
+   ADD COMMENT
+================================ */
 
 export const addComment = async (req, res) => {
 
@@ -51,14 +50,12 @@ export const addComment = async (req, res) => {
     const io = req.app.get("io");
 
     const comment = await prisma.comment.create({
-
       data: {
         text,
         postId,
         parentId: parentId || null,
         userId
       },
-
       include: {
         user: {
           select: {
@@ -68,7 +65,6 @@ export const addComment = async (req, res) => {
           }
         }
       }
-
     });
 
     /* ================= GET POST OWNER ================= */
@@ -97,29 +93,45 @@ export const addComment = async (req, res) => {
       select: { username: true }
     });
 
-    if (!commenter || !io) {
+    if (!commenter) {
       return res.status(201).json(comment);
     }
 
-    /* ================= SAVE NOTIFICATION (NEW) ================= */
+    /* ================= REMOVE OLD COMMENT NOTIFICATIONS ================= */
 
-    await prisma.notification.create({
+    await prisma.notification.deleteMany({
+      where: {
+        type: "comment",
+        senderId: userId,
+        receiverId: postOwnerId,
+        postId
+      }
+    });
+
+    /* ================= SAVE NOTIFICATION ================= */
+
+    const notification = await prisma.notification.create({
       data: {
         type: "comment",
         message: `@${commenter.username} commented on your post`,
         senderId: userId,
         receiverId: postOwnerId,
-        postId: postId
+        postId
       }
     });
 
-    /* ================= SOCKET NOTIFICATION (EXISTING) ================= */
+    /* ================= SOCKET NOTIFICATION ================= */
 
-    io.to(String(postOwnerId)).emit("notification", {
-      type: "comment",
-      fromUsername: commenter.username,
-      message: `@${commenter.username} commented on your post`
-    });
+    if (io) {
+      io.to(String(postOwnerId)).emit("notification", {
+        id: notification.id,
+        type: "comment",
+        fromUsername: commenter.username,
+        message: notification.message,
+        postId,
+        createdAt: notification.createdAt
+      });
+    }
 
     res.status(201).json(comment);
 
@@ -133,9 +145,9 @@ export const addComment = async (req, res) => {
 };
 
 
-// ================================
-// DELETE COMMENT
-// ================================
+/* ================================
+   DELETE COMMENT
+================================ */
 
 export const deleteComment = async (req, res) => {
 

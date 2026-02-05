@@ -17,15 +17,11 @@ export const toggleFollow = async (req, res) => {
 
     const targetUser = await prisma.user.findUnique({
       where: { username },
-      select: {
-        id: true
-      }
+      select: { id: true }
     });
 
     if (!targetUser) {
-      return res.status(404).json({
-        message: "User not found"
-      });
+      return res.status(404).json({ message: "User not found" });
     }
 
     const targetUserId = Number(targetUser.id);
@@ -55,10 +51,7 @@ export const toggleFollow = async (req, res) => {
         where: { id: existingFollow.id }
       });
 
-      return res.json({
-        following: false
-      });
-
+      return res.json({ following: false });
     }
 
     /* ================= CREATE FOLLOW ================= */
@@ -70,28 +63,51 @@ export const toggleFollow = async (req, res) => {
       }
     });
 
-    /* ================= GET FOLLOWER USERNAME ================= */
+    /* ================= GET FOLLOWER USER ================= */
 
     const followerUser = await prisma.user.findUnique({
       where: { id: followerId },
       select: { username: true }
     });
 
-    if (!followerUser || !io) {
+    if (!followerUser) {
       return res.json({ following: true });
     }
 
+    /* ================= REMOVE OLD FOLLOW NOTIFICATIONS ================= */
+
+    await prisma.notification.deleteMany({
+      where: {
+        type: "follow",
+        senderId: followerId,
+        receiverId: targetUserId
+      }
+    });
+
+    /* ================= SAVE NOTIFICATION ================= */
+
+    const notification = await prisma.notification.create({
+      data: {
+        type: "follow",
+        message: `@${followerUser.username} started following you`,
+        senderId: followerId,
+        receiverId: targetUserId
+      }
+    });
+
     /* ================= SOCKET NOTIFICATION ================= */
 
-    io.to(String(targetUserId)).emit("notification", {
-      type: "follow",
-      fromUsername: followerUser.username,
-      message: `@${followerUser.username} started following you`
-    });
+    if (io) {
+      io.to(String(targetUserId)).emit("notification", {
+        id: notification.id,
+        type: "follow",
+        fromUsername: followerUser.username,
+        message: notification.message,
+        createdAt: notification.createdAt
+      });
+    }
 
-    res.json({
-      following: true
-    });
+    res.json({ following: true });
 
   } catch (error) {
 

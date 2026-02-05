@@ -40,12 +40,14 @@ export default function HomeHeader() {
   const dropdownRef = useRef(null);
   const notifRef = useRef(null);
 
-  // ================= LOAD CHAT UNREAD =================
+  /* ================= CHAT UNREAD LOAD ================= */
+
   useEffect(() => {
     loadSaved();
   }, []);
 
-  // ================= USER LOAD =================
+  /* ================= USER LOAD ================= */
+
   useEffect(() => {
 
     const localUser =
@@ -72,21 +74,21 @@ export default function HomeHeader() {
 
   }, []);
 
-  // ================= REALTIME NOTIFICATION =================
+  /* ================= REALTIME NOTIFICATION ================= */
+
   useEffect(() => {
 
-    if (!socket || !user?.id) return;
+    const handler = (e) => {
 
-    const handleNotification = (data) => {
-
+      const data = e.detail;
       if (!data) return;
 
       const newNotification = {
-        id: Date.now(),
+        id: data.id || Date.now(),
         type: data.type,
         message: data.message,
         fromUsername: data.fromUsername,
-        time: Date.now()
+        time: data.createdAt || Date.now()
       };
 
       setNotifications(prev =>
@@ -96,15 +98,16 @@ export default function HomeHeader() {
       setUnreadCount(prev => prev + 1);
     };
 
-    socket.on("notification", handleNotification);
+    window.addEventListener("newNotification", handler);
 
     return () => {
-      socket.off("notification", handleNotification);
+      window.removeEventListener("newNotification", handler);
     };
 
-  }, [socket, user]);
+  }, []);
 
-  // ================= OUTSIDE CLICK =================
+  /* ================= OUTSIDE CLICK ================= */
+
   useEffect(() => {
 
     const handler = (e) => {
@@ -126,7 +129,8 @@ export default function HomeHeader() {
 
   }, []);
 
-  // ================= NAV =================
+  /* ================= NAV ================= */
+
   const goProfile = () => {
     setOpen(false);
     if (user?.username) navigate(`/profile/${user.username}`);
@@ -149,7 +153,8 @@ export default function HomeHeader() {
 
   const goChat = () => navigate("/chat");
 
-  // ================= LOGOUT =================
+  /* ================= LOGOUT ================= */
+
   const handleLogout = () => {
 
     localStorage.removeItem("token");
@@ -160,7 +165,8 @@ export default function HomeHeader() {
     navigate("/login");
   };
 
-  // ================= AVATAR =================
+  /* ================= AVATAR ================= */
+
   const profileImage =
     user?.avatar?.startsWith("http")
       ? user.avatar
@@ -294,31 +300,8 @@ export default function HomeHeader() {
 
             <div className="absolute right-0 mt-3 w-52 bg-[#081423] border border-cyan-500/20 rounded-xl shadow-xl">
 
-              {/* DESKTOP */}
-              <div className="hidden md:block">
-                <DropdownItem icon={<PersonIcon />} label="View Profile" onClick={goProfile} />
-                <DropdownItem icon={<LogoutIcon />} label="Logout" onClick={handleLogout} danger />
-              </div>
-
-              {/* MOBILE */}
-              <div className="md:hidden">
-
-                {isNewsPage ? (
-                  <>
-                    <DropdownItem icon={<HomeIcon />} label="Home" onClick={goHome} />
-                    <DropdownItem icon={<HelpOutlineIcon />} label="Help" onClick={goHelp} />
-                  </>
-                ) : (
-                  <>
-                    <DropdownItem icon={<PersonIcon />} label="View Profile" onClick={goProfile} />
-                    <DropdownItem icon={<NewspaperIcon />} label="News" onClick={goNews} />
-                    <DropdownItem icon={<HelpOutlineIcon />} label="Help" onClick={goHelp} />
-                  </>
-                )}
-
-                <DropdownItem icon={<LogoutIcon />} label="Logout" onClick={handleLogout} danger />
-
-              </div>
+              <DropdownItem icon={<PersonIcon />} label="View Profile" onClick={goProfile} />
+              <DropdownItem icon={<LogoutIcon />} label="Logout" onClick={handleLogout} danger />
 
             </div>
 
