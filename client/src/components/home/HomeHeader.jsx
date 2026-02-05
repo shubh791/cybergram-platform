@@ -307,12 +307,24 @@ export default function HomeHeader() {
     </div>
 
     {/* MOBILE MENU */}
-    <div className="md:hidden">
+    {/* MOBILE MENU */}
+<div className="md:hidden">
+  {isNewsPage ? (
+    <>
+      <DropdownItem icon={<HomeIcon />} label="Home" onClick={goHome} />
+      <DropdownItem icon={<HelpOutlineIcon />} label="Help" onClick={goHelp} />
+    </>
+  ) : (
+    <>
       <DropdownItem icon={<PersonIcon />} label="View Profile" onClick={goProfile} />
       <DropdownItem icon={<NewspaperIcon />} label="News" onClick={goNews} />
       <DropdownItem icon={<HelpOutlineIcon />} label="Help" onClick={goHelp} />
-      <DropdownItem icon={<LogoutIcon />} label="Logout" onClick={handleLogout} danger />
-    </div>
+    </>
+  )}
+
+  <DropdownItem icon={<LogoutIcon />} label="Logout" onClick={handleLogout} danger />
+</div>
+
 
   </div>
 
