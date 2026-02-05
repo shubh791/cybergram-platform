@@ -11,7 +11,7 @@ export default function ChatPage() {
 
   return (
 
-    // Root container
+    /* ROOT */
     <div
       className="
         h-screen
@@ -21,22 +21,21 @@ export default function ChatPage() {
       "
     >
 
-      {/* ================= GLOBAL CHAT HEADER ================= */}
-
-      {/* Show header:
-          - ALWAYS on desktop
-          - On mobile ONLY when no chat is opened */}
-
+      {/* ================= GLOBAL HEADER =================
+          Desktop → always visible
+          Mobile  → only when NO chat selected
+      */}
       <div className={`${selectedUser ? "hidden md:block" : "block"}`}>
         <ChatGlobalHeader />
       </div>
 
       {/* ================= BODY ================= */}
+      <div className="flex flex-1 min-h-0 overflow-hidden">
 
-      <div className="flex flex-1 min-h-0">
-
-        {/* ================= SIDEBAR ================= */}
-
+        {/* ================= SIDEBAR =================
+            Mobile → full screen list
+            Desktop → fixed width sidebar
+        */}
         <div
           className={`
             ${selectedUser ? "hidden md:flex" : "flex"}
@@ -49,8 +48,7 @@ export default function ChatPage() {
           <ChatSidebar onSelectUser={setSelectedUser} />
         </div>
 
-        {/* ================= CHAT PANEL ================= */}
-
+        {/* ================= CHAT WINDOW ================= */}
         <div className="flex flex-col flex-1 min-h-0">
 
           {selectedUser ? (
@@ -62,7 +60,8 @@ export default function ChatPage() {
 
           ) : (
 
-            <div className="hidden md:flex flex-1 items-center justify-center text-gray-500">
+            /* Desktop empty state */
+            <div className="hidden md:flex flex-1 items-center justify-center text-gray-500 text-sm">
               Select a conversation to start chatting
             </div>
 
@@ -72,9 +71,12 @@ export default function ChatPage() {
 
       </div>
 
-      {/* ================= FOOTER ================= */}
-
-      <div className="shrink-0">
+      {/* ================= FOOTER =================
+          Mobile safe:
+          - stays visible
+          - does not push layout
+      */}
+      <div className="shrink-0 border-t border-cyan-500/10">
         <ChatFooter />
       </div>
 

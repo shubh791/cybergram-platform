@@ -1,4 +1,5 @@
 import { Routes, Route, Outlet, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 // PUBLIC
 import Landing from "../pages/landing/Landing";
@@ -22,13 +23,22 @@ import ChatPage from "../pages/chat/ChatPage";
 import HomeHeader from "../components/home/HomeHeader";
 import ProtectedRoute from "./ProtectedRoute";
 
-
 // ================= HEADER CONTROL =================
 
 function ProtectedLayout() {
 
   const location = useLocation();
-  const isMobile = window.innerWidth < 768;
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // ✅ FIX: reactive screen size
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   let showHeader = false;
 
@@ -51,7 +61,6 @@ function ProtectedLayout() {
     </>
   );
 }
-
 
 // ================= ROUTES =================
 

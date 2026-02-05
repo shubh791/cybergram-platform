@@ -2,37 +2,44 @@ import GridOnIcon from "@mui/icons-material/GridOn";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 
 export default function ProfileTabs({ activeTab, setActiveTab }) {
-
   return (
-    <div className="mt-6 flex gap-3 flex-wrap">
-
+    <div
+      className="
+        mt-6
+        flex flex-wrap
+        justify-center sm:justify-start
+        gap-3
+        w-full
+      "
+    >
       <Tab
         active={activeTab === "posts"}
         onClick={() => setActiveTab("posts")}
-        icon={<GridOnIcon />}
+        icon={<GridOnIcon fontSize="small" />}
         label="Posts"
       />
 
       <Tab
         active={activeTab === "saved"}
         onClick={() => setActiveTab("saved")}
-        icon={<BookmarkBorderIcon />}
+        icon={<BookmarkBorderIcon fontSize="small" />}
         label="Saved"
       />
-
     </div>
   );
 }
 
 function Tab({ active, onClick, icon, label }) {
-
   return (
     <button
       onClick={onClick}
       className={`
-        flex items-center gap-2
-        px-5 py-2 rounded-lg
+        flex items-center justify-center gap-2
+        px-4 sm:px-5 py-2
+        rounded-lg
         border
+        text-sm
+        min-w-[110px]
         transition
         ${
           active

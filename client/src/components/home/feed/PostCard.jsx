@@ -28,6 +28,7 @@ export default function PostCard({ post }) {
   const [previewData, setPreviewData] = useState(null);
 
   /* ================= LIKE ================= */
+
   const [liked, setLiked] = useState(
     post.likes?.some(like => like.userId === currentUser?.id)
   );
@@ -36,13 +37,14 @@ export default function PostCard({ post }) {
   const [likeAnim, setLikeAnim] = useState(false);
 
   /* ================= COMMENTS ================= */
+
   const [showComments, setShowComments] = useState(false);
-  const [commentCount, setCommentCount] = useState(
-    post.comments?.length || 0
-  );
+  const [commentCount, setCommentCount] =
+    useState(post.comments?.length || 0);
   const [commentAnim, setCommentAnim] = useState(false);
 
   /* ================= SAVE ================= */
+
   const [saved, setSaved] = useState(
     post.saves?.some(save => save.userId === currentUser?.id)
   );
@@ -50,7 +52,9 @@ export default function PostCard({ post }) {
   const [saveAnim, setSaveAnim] = useState(false);
 
   /* ================= FOLLOW ================= */
-  const [following, setFollowing] = useState(post.user.isFollowing || false);
+
+  const [following, setFollowing] =
+    useState(post.user.isFollowing || false);
 
   useEffect(() => {
     const handler = (e) => {
@@ -62,14 +66,17 @@ export default function PostCard({ post }) {
     return () => window.removeEventListener("followUpdated", handler);
   }, [post.user.username]);
 
-  /* ================= LIKE HANDLER ================= */
+  /* ================= LIKE ================= */
+
   const handleLike = async () => {
+
     if (likeLoading) return;
 
     const newLiked = !liked;
 
     setLiked(newLiked);
     setLikeCount(p => newLiked ? p + 1 : p - 1);
+
     setLikeAnim(true);
     setTimeout(() => setLikeAnim(false), 200);
 
@@ -77,20 +84,23 @@ export default function PostCard({ post }) {
       setLikeLoading(true);
       await API.post(`/likes/${post.id}`);
     } catch {
-      // rollback
       setLiked(!newLiked);
       setLikeCount(p => newLiked ? p - 1 : p + 1);
     } finally {
       setLikeLoading(false);
     }
+
   };
 
-  /* ================= SAVE HANDLER ================= */
+  /* ================= SAVE ================= */
+
   const handleSave = async () => {
+
     if (saveLoading) return;
 
     const newSaved = !saved;
     setSaved(newSaved);
+
     setSaveAnim(true);
     setTimeout(() => setSaveAnim(false), 200);
 
@@ -102,16 +112,21 @@ export default function PostCard({ post }) {
     } finally {
       setSaveLoading(false);
     }
+
   };
 
-  /* ================= FOLLOW HANDLER ================= */
+  /* ================= FOLLOW ================= */
+
   const handleFollow = async () => {
+
     await API.post(`/follow/${post.user.username}`);
+
     window.dispatchEvent(
       new CustomEvent("followUpdated", {
         detail: { username: post.user.username }
       })
     );
+
   };
 
   const goProfile = () => {
@@ -124,11 +139,16 @@ export default function PostCard({ post }) {
       : `${BASE_URL}/uploads/${img}`;
 
   return (
-    <div className="bg-[#050b14] border border-cyan-500/20 rounded-xl p-4">
+    <div className="bg-[#050b14] border border-cyan-500/20 rounded-xl p-3 sm:p-4">
 
       {/* HEADER */}
-      <div className="flex justify-between items-center mb-2">
-        <div onClick={goProfile} className="flex items-center gap-3 cursor-pointer">
+
+      <div className="flex flex-wrap justify-between items-center gap-2 mb-2">
+
+        <div
+          onClick={goProfile}
+          className="flex items-center gap-3 cursor-pointer min-w-0"
+        >
           <img
             src={
               post.user.avatar
@@ -136,21 +156,26 @@ export default function PostCard({ post }) {
                 : "https://i.pravatar.cc/150"
             }
             className={`w-9 h-9 rounded-full object-cover border ${
-              isOfficial ? "border-green-500" : "border-cyan-400/40"
+              isOfficial
+                ? "border-green-500"
+                : "border-cyan-400/40"
             }`}
           />
-          <div className="flex items-center gap-1">
-            <span className="text-cyan-400 font-semibold text-sm">
+
+          <div className="flex items-center gap-1 truncate">
+            <span className="text-cyan-400 font-semibold text-sm truncate">
               @{post.user.username}
             </span>
-            {isOfficial && <VerifiedIcon className="text-green-500 text-sm" />}
+            {isOfficial && (
+              <VerifiedIcon className="text-green-500 text-sm" />
+            )}
           </div>
         </div>
 
         {!isOwner && (
           <button
             onClick={handleFollow}
-            className={`text-xs px-3 py-1 rounded-full border ${
+            className={`text-xs px-3 py-1 rounded-full border whitespace-nowrap ${
               following
                 ? "border-red-400 text-red-400"
                 : "border-cyan-400 text-cyan-400"
@@ -159,63 +184,102 @@ export default function PostCard({ post }) {
             {following ? "Unfollow" : "Follow"}
           </button>
         )}
+
       </div>
 
       {/* CAPTION */}
+
       {post.caption && (
-        <p className="text-sm text-gray-200 mb-3">{post.caption}</p>
+        <p className="text-sm text-gray-200 mb-3 break-words leading-relaxed">
+          {post.caption}
+        </p>
       )}
 
       {/* IMAGE */}
+
       {post.images?.length > 0 && (
         <div className="mb-4">
+
           {post.images.length === 1 ? (
+
             <img
               src={getImageUrl(post.images[0])}
-              onClick={() => setPreviewData({ images: post.images, index: 0 })}
-              className="w-full max-h-[400px] object-contain rounded-lg bg-black cursor-pointer"
+              onClick={() =>
+                setPreviewData({
+                  images: post.images,
+                  index: 0
+                })
+              }
+              className="
+                w-full
+                max-h-[65vh]
+                object-contain
+                rounded-lg
+                bg-black
+                cursor-pointer
+              "
             />
+
           ) : (
+
             <ImageCarousel
               images={post.images}
               onPreview={(index) =>
-                setPreviewData({ images: post.images, index })
+                setPreviewData({
+                  images: post.images,
+                  index
+                })
               }
             />
+
           )}
+
         </div>
       )}
 
       {/* ACTION BAR */}
-      <div className="flex justify-between items-center pt-3 border-t border-cyan-500/20">
-        <div className="flex items-center gap-4 text-sm">
+
+      <div className="flex justify-between items-center pt-3 border-t border-cyan-500/20 flex-wrap gap-2">
+
+        <div className="flex items-center gap-4 text-sm flex-wrap">
+
           <button
             onClick={handleLike}
-            className={`transition ${likeAnim ? "scale-125" : "scale-100"}`}
+            className={`flex items-center gap-1 transition ${
+              likeAnim ? "scale-110" : "scale-100"
+            }`}
           >
-            {liked ? <FavoriteIcon className="text-pink-500" /> : <FavoriteBorderIcon />}
-            <span className="ml-1 text-xs">
+            {liked
+              ? <FavoriteIcon className="text-pink-500" />
+              : <FavoriteBorderIcon />}
+            <span className="text-xs">
               {likeCount} {likeCount === 1 ? "like" : "likes"}
             </span>
           </button>
 
           <button
             onClick={() => setShowComments(p => !p)}
-            className={`transition ${commentAnim ? "scale-125" : "scale-100"}`}
+            className={`flex items-center gap-1 transition ${
+              commentAnim ? "scale-110" : "scale-100"
+            }`}
           >
             <ChatBubbleOutlineIcon />
-            <span className="ml-1 text-xs">
+            <span className="text-xs">
               {commentCount} {commentCount === 1 ? "comment" : "comments"}
             </span>
           </button>
+
         </div>
 
         <button
           onClick={handleSave}
-          className={`transition ${saveAnim ? "scale-125" : "scale-100"}`}
+          className={`transition ${
+            saveAnim ? "scale-110" : "scale-100"
+          }`}
         >
           {saved ? <BookmarkIcon /> : <BookmarkBorderIcon />}
         </button>
+
       </div>
 
       {previewData && (
@@ -236,6 +300,7 @@ export default function PostCard({ post }) {
           }}
         />
       )}
+
     </div>
   );
 }

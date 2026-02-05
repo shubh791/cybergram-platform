@@ -38,20 +38,27 @@ export default function FeedList({ refresh, category }) {
 
   };
 
+  /* ================= LOADING ================= */
+
   if (loading) {
     return (
-      <div className="text-center text-gray-500 text-sm py-8">
+      <div className="text-center text-gray-500 text-sm py-10">
         Loading feed...
       </div>
     );
   }
 
   return (
-    <div className="space-y-5">
+    <div
+      className="
+        space-y-6
+        px-0 sm:px-1
+      "
+    >
 
       {posts.length === 0 ? (
 
-        <div className="text-center text-gray-500 py-10 text-sm">
+        <div className="text-center text-gray-500 py-12 text-sm">
           No posts in this category
         </div>
 

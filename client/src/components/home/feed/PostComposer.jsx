@@ -94,14 +94,17 @@ export default function PostComposer({ onPostSuccess }) {
   };
 
   return (
-    <div className="
-      border border-cyan-400/30
-      rounded-xl
-      p-4 sm:p-5
-      mb-6
-      bg-[#050b14]
-      shadow-[0_0_30px_rgba(0,255,255,0.08)]
-    ">
+    <div
+      className="
+        w-full max-w-full overflow-hidden
+        border border-cyan-400/30
+        rounded-xl
+        p-4 sm:p-5
+        mb-6
+        bg-[#050b14]
+        shadow-[0_0_30px_rgba(0,255,255,0.08)]
+      "
+    >
 
       {/* CATEGORY */}
 
@@ -130,9 +133,7 @@ export default function PostComposer({ onPostSuccess }) {
 
       {images.length > 0 && (
 
-        <div className="
-          grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4
-        ">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
 
           {images.map((img, i) => (
 
@@ -186,7 +187,7 @@ export default function PostComposer({ onPostSuccess }) {
         }}
         placeholder="Describe the cyber scam or issue..."
         className="
-          w-full
+          w-full max-w-full
           bg-transparent
           outline-none
           resize-none
@@ -197,17 +198,20 @@ export default function PostComposer({ onPostSuccess }) {
           leading-relaxed
           mb-3
           px-1
+          break-words
         "
       />
 
       {/* FOOTER */}
 
-      <div className="
-        flex flex-col sm:flex-row
-        gap-3 sm:gap-0
-        justify-between items-start sm:items-center
-        pt-2 border-t border-cyan-500/20
-      ">
+      <div
+        className="
+          flex flex-col sm:flex-row
+          gap-3 sm:gap-0
+          justify-between items-start sm:items-center
+          pt-2 border-t border-cyan-500/20
+        "
+      >
 
         <label className="text-cyan-400 text-sm cursor-pointer hover:underline">
           Add Image
@@ -219,7 +223,11 @@ export default function PostComposer({ onPostSuccess }) {
           />
         </label>
 
-        <span className={`text-xs ${wordCount >= WORD_LIMIT ? "text-red-400" : "text-gray-400"}`}>
+        <span className={`text-xs ${
+          wordCount >= WORD_LIMIT
+            ? "text-red-400"
+            : "text-gray-400"
+        }`}>
           {wordCount}/{WORD_LIMIT}
         </span>
 

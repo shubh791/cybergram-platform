@@ -16,7 +16,6 @@ export default function ChatWindow({ selectedUser, onBack }) {
 
   const socket = useContext(SocketContext);
   const { onlineUsers } = useContext(OnlineContext);
-
   const { setActiveChatId } = useContext(ChatUnreadContext);
 
   const [messages, setMessages] = useState([]);
@@ -28,27 +27,17 @@ export default function ChatWindow({ selectedUser, onBack }) {
 
   const localUser = JSON.parse(localStorage.getItem("user"));
 
-  // ✅ OFFICIAL ACCOUNT CHECK
   const isOfficial = selectedUser?.id === 8;
 
-  /* ================= ACTIVE CHAT ================= */
-
+  /* ACTIVE CHAT */
   useEffect(() => {
-
     if (!selectedUser) return;
-
     setActiveChatId(selectedUser.id);
-
-    return () => {
-      setActiveChatId(null);
-    };
-
+    return () => setActiveChatId(null);
   }, [selectedUser, setActiveChatId]);
 
-  /* ================= LOAD CHAT ================= */
-
+  /* LOAD MESSAGES */
   useEffect(() => {
-
     if (!selectedUser) return;
 
     const loadMessages = async () => {
@@ -61,19 +50,14 @@ export default function ChatWindow({ selectedUser, onBack }) {
     };
 
     loadMessages();
-
   }, [selectedUser]);
 
-  /* ================= SOCKET REALTIME ================= */
-
+  /* SOCKET EVENTS */
   useEffect(() => {
-
     if (!socket || !selectedUser) return;
 
     const handleIncoming = (data) => {
-
       if (String(data.senderId) === String(selectedUser.id)) {
-
         setMessages(prev => [...prev, data]);
 
         socket.emit("message_seen", {
@@ -84,12 +68,9 @@ export default function ChatWindow({ selectedUser, onBack }) {
     };
 
     const handleSeen = ({ messageId }) => {
-
       setMessages(prev =>
         prev.map(msg =>
-          msg.id === messageId
-            ? { ...msg, read: true }
-            : msg
+          msg.id === messageId ? { ...msg, read: true } : msg
         )
       );
     };
@@ -104,76 +85,56 @@ export default function ChatWindow({ selectedUser, onBack }) {
 
   }, [socket, selectedUser]);
 
-  /* ================= AUTO SCROLL ================= */
-
+  /* AUTO SCROLL */
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  /* ================= SEND MESSAGE ================= */
-
+  /* SEND */
   const handleSend = async (text) => {
-
     if (!text.trim()) return;
 
     try {
-
       const res = await API.post("/chat/send", {
         receiverId: selectedUser.id,
         content: text
       });
 
       const savedMsg = res.data;
-
       setMessages(prev => [...prev, savedMsg]);
-
       socket.emit("send_message", savedMsg);
 
     } catch (err) {
       console.log("Send failed:", err);
     }
-
   };
 
-  /* ================= DELETE CHAT ================= */
-
+  /* DELETE CHAT */
   const handleDeleteChat = async () => {
-
     try {
-
       await API.delete(`/chat/delete/${selectedUser.id}`);
-
       setMessages([]);
       setConfirmDelete(false);
-
     } catch (err) {
       console.log("Delete failed:", err);
     }
-
   };
 
-  /* ================= CLOSE MENU ================= */
-
+  /* CLOSE MENU */
   useEffect(() => {
-
     const handler = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setMenuOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-
   }, []);
 
-  /* ================= ONLINE STATUS ================= */
-
+  /* ONLINE STATUS */
   const isOnline = onlineUsers?.has
     ? onlineUsers.has(String(selectedUser.id))
     : onlineUsers.includes(String(selectedUser.id));
-
-  /* ================= AVATAR ================= */
 
   const profileImage =
     selectedUser?.avatar
@@ -184,22 +145,21 @@ export default function ChatWindow({ selectedUser, onBack }) {
 
   return (
 
-    <div className="flex flex-col flex-1 min-h-0 bg-[#050d18]">
+    <div className="flex flex-col flex-1 min-h-0 bg-[#050d18] overflow-hidden">
 
       {/* HEADER */}
-
       <div className="
         flex items-center justify-between
-        px-4 py-3
+        px-3 sm:px-4 py-3
         border-b border-cyan-500/10
         bg-[#071427]
       ">
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
 
           <button
             onClick={onBack}
-            className="md:hidden text-cyan-400 text-xl"
+            className="md:hidden text-cyan-400 text-xl shrink-0"
           >
             ←
           </button>
@@ -207,24 +167,20 @@ export default function ChatWindow({ selectedUser, onBack }) {
           <img
             src={profileImage}
             className={`
-              w-10 h-10 rounded-full object-cover border
-              ${
-                isOfficial
-                  ? "border-green-500"
-                  : "border-cyan-400/40"
-              }
+              w-9 h-9 sm:w-10 sm:h-10
+              rounded-full object-cover border shrink-0
+              ${isOfficial ? "border-green-500" : "border-cyan-400/40"}
             `}
           />
 
-          <div className="flex flex-col">
+          <div className="flex flex-col truncate">
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 truncate">
 
-              <span className="text-cyan-400 font-semibold">
+              <span className="text-cyan-400 font-semibold truncate">
                 @{selectedUser.username}
               </span>
 
-              {/* ✅ VERIFIED BADGE ONLY FOR OFFICIAL */}
               {isOfficial && (
                 <VerifiedIcon className="text-green-500 text-sm" />
               )}
@@ -240,29 +196,23 @@ export default function ChatWindow({ selectedUser, onBack }) {
         </div>
 
         {/* MENU */}
-
-        <div ref={menuRef} className="relative">
+        <div ref={menuRef} className="relative shrink-0">
 
           <button
-            onClick={() => setMenuOpen(prev => !prev)}
+            onClick={() => setMenuOpen(p => !p)}
             className="text-cyan-400"
           >
             <MoreVertIcon />
           </button>
 
           {menuOpen && (
-
             <div className="
-              absolute right-0 mt-2
-              w-44
+              absolute right-0 mt-2 w-44
               bg-[#071427]
               border border-cyan-500/20
-              rounded-lg
-              shadow-xl
-              overflow-hidden
-              z-50
+              rounded-lg shadow-xl
+              overflow-hidden z-50
             ">
-
               <div
                 onClick={() => {
                   setConfirmDelete(true);
@@ -270,19 +220,15 @@ export default function ChatWindow({ selectedUser, onBack }) {
                 }}
                 className="
                   flex items-center gap-2
-                  px-4 py-2
-                  text-red-400
+                  px-4 py-2 text-red-400
                   hover:bg-red-500/10
-                  cursor-pointer
-                  text-sm
+                  cursor-pointer text-sm
                 "
               >
-                <DeleteOutlineIcon fontSize="small" />
+                <DeleteOutlineIcon fontSize='small' />
                 Clear History
               </div>
-
             </div>
-
           )}
 
         </div>
@@ -290,44 +236,39 @@ export default function ChatWindow({ selectedUser, onBack }) {
       </div>
 
       {/* MESSAGE AREA */}
-
       <div className="
         flex-1 min-h-0 overflow-y-auto
-        px-3 md:px-6 py-4 space-y-3
-        scrollbar-thin scrollbar-thumb-cyan-500/30
+        px-3 sm:px-4 md:px-6 py-4 space-y-3
       ">
-
         {messages.map(msg => (
-
           <MessageBubble
             key={msg.id}
             message={msg}
             isMine={msg.senderId === localUser.id}
           />
-
         ))}
 
         <div ref={bottomRef} />
-
       </div>
 
-      <ChatInput onSend={handleSend} />
+      {/* INPUT */}
+      <div className="shrink-0 border-t border-cyan-500/10">
+        <ChatInput onSend={handleSend} />
+      </div>
 
       {/* DELETE MODAL */}
-
       {confirmDelete && (
-
-        <div className="
-          fixed inset-0 bg-black/60
-          flex items-center justify-center z-50
-        ">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
 
           <div className="
-            bg-[#071427] border border-cyan-500/20
-            rounded-xl p-5 w-[300px] text-center
+            bg-[#071427]
+            border border-cyan-500/20
+            rounded-xl p-5
+            w-[90%] max-w-sm
+            text-center
           ">
 
-            <p className="text-white mb-4">
+            <p className="text-white mb-4 text-sm sm:text-base">
               Clear this chat for you?
             </p>
 
@@ -352,10 +293,8 @@ export default function ChatWindow({ selectedUser, onBack }) {
           </div>
 
         </div>
-
       )}
 
     </div>
-
   );
 }

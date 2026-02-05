@@ -10,7 +10,7 @@ export default function ProfileHeader({
   onAvatarClick,
   onFollowToggle
 }) {
-  // Logged in user
+
   const token = localStorage.getItem("token");
   let loggedUsername = null;
 
@@ -32,9 +32,12 @@ export default function ProfileHeader({
 
   return (
     <div className="
-      w-full bg-[#0b1628] border border-cyan-500/20 rounded-2xl
-      p-4 sm:p-5 md:p-6 flex flex-col sm:flex-row
-      gap-4 sm:gap-6 items-center sm:items-start
+      w-full max-w-full overflow-hidden
+      bg-[#0b1628] border border-cyan-500/20 rounded-2xl
+      p-4 sm:p-5 md:p-6
+      flex flex-col sm:flex-row
+      gap-5 sm:gap-6
+      items-center sm:items-start
     ">
 
       {/* AVATAR */}
@@ -54,8 +57,12 @@ export default function ProfileHeader({
         />
 
         {isOwner && (
-          <div className="absolute inset-0 bg-black/40 rounded-full
-            flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+          <div className="
+            absolute inset-0 bg-black/40 rounded-full
+            flex items-center justify-center
+            opacity-0 group-hover:opacity-100
+            transition
+          ">
             <CameraAltIcon className="text-white" />
           </div>
         )}
@@ -70,33 +77,50 @@ export default function ProfileHeader({
       {/* INFO */}
       <div className="flex-1 w-full text-center sm:text-left">
 
-        <div className="flex items-center justify-center sm:justify-start gap-2">
-          <h2 className="font-bold text-base sm:text-lg md:text-xl">
+        {/* USERNAME */}
+        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+          <h2 className="font-bold text-base sm:text-lg md:text-xl break-all">
             @{profile.username}
           </h2>
+
           {isOfficial && (
             <VerifiedIcon className="text-green-500 text-sm sm:text-base" />
           )}
         </div>
 
-        <p className="text-gray-400 text-xs sm:text-sm mt-2 max-w-xl mx-auto sm:mx-0">
+        {/* BIO */}
+        <p className="
+          text-gray-400 text-xs sm:text-sm
+          mt-2 max-w-xl mx-auto sm:mx-0
+          break-words leading-relaxed
+        ">
           {profile.bio || "No bio added yet"}
         </p>
 
         {/* STATS */}
-        <div className="flex justify-center sm:justify-start gap-4 sm:gap-8 mt-4">
+        <div className="
+          flex flex-wrap
+          justify-center sm:justify-start
+          gap-4 sm:gap-8
+          mt-4
+        ">
           <Stat label="Posts" value={profile._count.posts} />
           <Stat label="Followers" value={profile._count.followers} />
           <Stat label="Following" value={profile._count.following} />
         </div>
 
-        {/* ACTION */}
+        {/* ACTION BUTTON */}
         {isOwner ? (
           <button
             onClick={onEdit}
-            className="mt-4 bg-green-500 hover:bg-green-600 text-black
-              px-4 py-2 rounded-lg flex items-center gap-2 font-semibold
-              mx-auto sm:mx-0 text-sm"
+            className="
+              mt-5
+              w-full sm:w-auto
+              bg-green-500 hover:bg-green-600
+              text-black px-4 py-2
+              rounded-lg flex items-center justify-center gap-2
+              font-semibold text-sm
+            "
           >
             <EditIcon fontSize="small" />
             Edit Profile
@@ -104,16 +128,22 @@ export default function ProfileHeader({
         ) : (
           <button
             onClick={onFollowToggle}
-            className={`mt-4 px-5 py-2 rounded-lg font-semibold text-sm
-              mx-auto sm:mx-0 transition ${
+            className={`
+              mt-5
+              w-full sm:w-auto
+              px-5 py-2 rounded-lg font-semibold text-sm
+              transition
+              ${
                 profile.isFollowing
                   ? "bg-gray-600 hover:bg-gray-700 text-white"
                   : "bg-green-500 hover:bg-green-600 text-black"
-              }`}
+              }
+            `}
           >
             {profile.isFollowing ? "Following" : "Follow"}
           </button>
         )}
+
       </div>
     </div>
   );
@@ -121,9 +151,13 @@ export default function ProfileHeader({
 
 function Stat({ label, value }) {
   return (
-    <div className="text-center">
-      <p className="font-bold text-sm sm:text-base md:text-lg">{value}</p>
-      <p className="text-gray-400 text-[11px] sm:text-sm">{label}</p>
+    <div className="text-center min-w-[70px]">
+      <p className="font-bold text-sm sm:text-base md:text-lg">
+        {value}
+      </p>
+      <p className="text-gray-400 text-[11px] sm:text-sm">
+        {label}
+      </p>
     </div>
   );
 }
