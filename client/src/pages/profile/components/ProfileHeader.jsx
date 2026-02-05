@@ -46,25 +46,18 @@ export default function ProfileHeader({
 
   const handleFollowClick = async () => {
 
-    // ✅ Optimistic UI update
-    setLocalProfile(prev => ({
-      ...prev,
-      isFollowing: !prev.isFollowing,
-      _count: {
-        ...prev._count,
-        followers: prev.isFollowing
-          ? prev._count.followers - 1
-          : prev._count.followers + 1
-      }
-    }));
+  // Only toggle button state instantly
+  setLocalProfile(prev => ({
+    ...prev,
+    isFollowing: !prev.isFollowing
+  }));
 
-    try {
-      await onFollowToggle();
-    } catch {
-      // rollback if API fails
-      setLocalProfile(profile);
-    }
-  };
+  try {
+    await onFollowToggle();
+  } catch {
+    setLocalProfile(profile);
+  }
+};
 
   return (
     <div className="
