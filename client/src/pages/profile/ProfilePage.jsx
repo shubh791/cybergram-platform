@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
-import API from "../../api/axios"; // renamed for clarity
+import API from "../../api/axios";
 
 import ProfileHeader from "./components/ProfileHeader";
 import ProfileTabs from "./components/ProfileTabs";
@@ -39,7 +39,6 @@ export default function ProfilePage() {
 
   const fetchProfile = async () => {
     try {
-
       if (!username) return;
 
       const res = await API.get(`/profile/${username}`);
@@ -47,13 +46,11 @@ export default function ProfilePage() {
       setBioInput(res.data.bio || "");
 
     } catch (err) {
-
       console.error("Profile fetch error:", err);
 
       if (err.response?.status === 404) {
         navigate("/home");
       }
-
     }
   };
 
@@ -64,25 +61,22 @@ export default function ProfilePage() {
   /* ================= FOLLOW ================= */
 
   const handleFollowToggle = async () => {
-
     try {
 
       await API.post(`/follow/${username}`);
-      await fetchProfile();
+
+      // optional background refresh (no UI block)
+      setTimeout(fetchProfile, 800);
 
       window.dispatchEvent(
         new CustomEvent("followUpdated", {
-          detail: {
-            username,
-            following: profile?.isFollowing
-          }
+          detail: { username }
         })
       );
 
     } catch (error) {
       console.log("Follow error:", error);
     }
-
   };
 
   /* ================= POSTS ================= */
@@ -107,12 +101,11 @@ export default function ProfilePage() {
       .then(res => setSavedPosts(res.data))
       .catch(err => console.log("Saved fetch error:", err));
 
-  }, [activeTab]);
+  }, [activeTab, username]);
 
   /* ================= BIO UPDATE ================= */
 
   const handleBioUpdate = async () => {
-
     try {
 
       await API.put("/profile/edit/bio", { bio: bioInput });
@@ -127,29 +120,23 @@ export default function ProfilePage() {
     } catch (err) {
       console.log("Bio update error:", err);
     }
-
   };
 
   /* ================= AVATAR UPDATE ================= */
 
   const handleAvatarUpdate = (newAvatar) => {
-
     setProfile(prev => ({
       ...prev,
       avatar: newAvatar
     }));
-
   };
 
   /* ================= LOGOUT ================= */
 
   const handleLogout = () => {
-
     localStorage.clear();
     sessionStorage.clear();
-
     navigate("/login");
-
   };
 
   /* ================= DELETE ACCOUNT ================= */
@@ -173,7 +160,6 @@ export default function ProfilePage() {
       sessionStorage.clear();
 
       alert("Account deleted permanently");
-
       navigate("/");
 
     } catch (error) {
@@ -202,7 +188,6 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-[#050d1a] text-white px-3 sm:px-5 md:px-10 py-6">
 
-      {/* DROPDOWN */}
       <div className="flex justify-end mb-4 relative">
 
         <button
@@ -262,10 +247,13 @@ export default function ProfilePage() {
         setActiveTab={setActiveTab}
       />
 
+      {/* ✅ CRITICAL FIX HERE */}
       <ProfilePostsGrid
         activeTab={activeTab}
         posts={posts}
+        setPosts={setPosts}
         savedPosts={savedPosts}
+        setSavedPosts={setSavedPosts}
       />
 
       {showEdit && (

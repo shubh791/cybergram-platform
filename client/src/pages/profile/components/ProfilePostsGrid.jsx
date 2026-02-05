@@ -12,7 +12,6 @@ export default function ProfilePostsGrid({
   savedPosts = [],
   setSavedPosts
 }) {
-
   const data = activeTab === "posts" ? posts : savedPosts;
 
   const [deleteId, setDeleteId] = useState(null);
@@ -38,14 +37,10 @@ export default function ProfilePostsGrid({
     if (!deleteId) return;
 
     try {
+      // ✅ Optimistic UI update (instant remove)
+      setPosts(prev => prev.filter(p => p.id !== deleteId));
+
       await axios.delete(`/posts/${deleteId}`);
-
-      // ✅ REFRESH POSTS FROM SERVER
-      const token = localStorage.getItem("token");
-      const decoded = jwtDecode(token);
-
-      const res = await axios.get(`/profile/${decoded.username}/posts`);
-      setPosts(res.data);
 
     } catch (error) {
       console.warn("Delete error:", error?.response?.status);
@@ -60,11 +55,10 @@ export default function ProfilePostsGrid({
     if (!unsaveId) return;
 
     try {
-      await axios.post(`/saves/${unsaveId}`);
+      // ✅ Instant UI update
+      setSavedPosts(prev => prev.filter(p => p.id !== unsaveId));
 
-      // ✅ REFRESH SAVED POSTS FROM SERVER
-      const res = await axios.get(`/profile/saved/me`);
-      setSavedPosts(res.data);
+      await axios.post(`/saves/${unsaveId}`);
 
     } catch (error) {
       console.warn("Unsave error:", error?.response?.status);

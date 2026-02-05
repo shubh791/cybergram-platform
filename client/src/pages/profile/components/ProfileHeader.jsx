@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
 
 import VerifiedIcon from "@mui/icons-material/Verified";
@@ -12,6 +12,14 @@ export default function ProfileHeader({
   onFollowToggle
 }) {
 
+  /* ================= LOCAL PROFILE STATE ================= */
+
+  const [localProfile, setLocalProfile] = useState(profile);
+
+  useEffect(() => {
+    setLocalProfile(profile);
+  }, [profile]);
+
   // Logged in user
   const token = localStorage.getItem("token");
   let loggedUsername = null;
@@ -23,16 +31,40 @@ export default function ProfileHeader({
     } catch {}
   }
 
-  const isOwner = loggedUsername === profile.username;
+  const isOwner = loggedUsername === localProfile.username;
 
-  // ✅ OFFICIAL ACCOUNT CHECK
-  const isOfficial = profile.id === 8;
+  // Official account check
+  const isOfficial = localProfile.id === 8;
 
-  const avatarUrl = profile.avatar
-    ? profile.avatar.startsWith("http")
-      ? profile.avatar
-      : `http://localhost:5000/uploads/${profile.avatar}`
+  const avatarUrl = localProfile.avatar
+    ? localProfile.avatar.startsWith("http")
+      ? localProfile.avatar
+      : `http://localhost:5000/uploads/${localProfile.avatar}`
     : "https://i.pravatar.cc/300";
+
+  /* ================= FOLLOW HANDLER ================= */
+
+  const handleFollowClick = async () => {
+
+    // ✅ Optimistic UI update
+    setLocalProfile(prev => ({
+      ...prev,
+      isFollowing: !prev.isFollowing,
+      _count: {
+        ...prev._count,
+        followers: prev.isFollowing
+          ? prev._count.followers - 1
+          : prev._count.followers + 1
+      }
+    }));
+
+    try {
+      await onFollowToggle();
+    } catch {
+      // rollback if API fails
+      setLocalProfile(profile);
+    }
+  };
 
   return (
     <div className="
@@ -71,7 +103,6 @@ export default function ProfileHeader({
           `}
         />
 
-        {/* Camera only for owner */}
         {isOwner && (
           <div className="
             absolute inset-0
@@ -85,7 +116,6 @@ export default function ProfileHeader({
           </div>
         )}
 
-        {/* ✅ VERIFIED BADGE ONLY FOR OFFICIAL */}
         {isOfficial && (
           <span className="
             absolute bottom-1 right-1
@@ -103,10 +133,9 @@ export default function ProfileHeader({
         <div className="flex items-center justify-center sm:justify-start gap-2">
 
           <h2 className="font-bold text-base sm:text-lg md:text-xl">
-            @{profile.username}
+            @{localProfile.username}
           </h2>
 
-          {/* ✅ NAME VERIFIED ICON ONLY FOR OFFICIAL */}
           {isOfficial && (
             <VerifiedIcon className="text-green-500 text-sm sm:text-base" />
           )}
@@ -120,7 +149,7 @@ export default function ProfileHeader({
           max-w-xl
           mx-auto sm:mx-0
         ">
-          {profile.bio || "No bio added yet"}
+          {localProfile.bio || "No bio added yet"}
         </p>
 
         {/* STATS */}
@@ -130,9 +159,9 @@ export default function ProfileHeader({
           mt-4
         ">
 
-          <Stat label="Posts" value={profile._count.posts} />
-          <Stat label="Followers" value={profile._count.followers} />
-          <Stat label="Following" value={profile._count.following} />
+          <Stat label="Posts" value={localProfile._count.posts} />
+          <Stat label="Followers" value={localProfile._count.followers} />
+          <Stat label="Following" value={localProfile._count.following} />
 
         </div>
 
@@ -160,7 +189,7 @@ export default function ProfileHeader({
         ) : (
 
           <button
-            onClick={onFollowToggle}
+            onClick={handleFollowClick}
             className={`
               mt-4
               px-5 py-2
@@ -170,13 +199,13 @@ export default function ProfileHeader({
               mx-auto sm:mx-0
               transition
               ${
-                profile.isFollowing
+                localProfile.isFollowing
                   ? "bg-gray-600 hover:bg-gray-700 text-white"
                   : "bg-green-500 hover:bg-green-600 text-black"
               }
             `}
           >
-            {profile.isFollowing ? "Following" : "Follow"}
+            {localProfile.isFollowing ? "Following" : "Follow"}
           </button>
 
         )}
