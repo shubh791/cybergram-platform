@@ -296,16 +296,28 @@ export default function HomeHeader() {
             <ArrowDropDownIcon className="text-cyan-400 hidden md:block" />
           </div>
 
-          {open && (
+         {open && (
 
-            <div className="absolute right-0 mt-3 w-52 bg-[#081423] border border-cyan-500/20 rounded-xl shadow-xl">
+  <div className="absolute right-0 mt-3 w-52 bg-[#081423] border border-cyan-500/20 rounded-xl shadow-xl">
 
-              <DropdownItem icon={<PersonIcon />} label="View Profile" onClick={goProfile} />
-              <DropdownItem icon={<LogoutIcon />} label="Logout" onClick={handleLogout} danger />
+    {/* DESKTOP MENU */}
+    <div className="hidden md:block">
+      <DropdownItem icon={<PersonIcon />} label="View Profile" onClick={goProfile} />
+      <DropdownItem icon={<LogoutIcon />} label="Logout" onClick={handleLogout} danger />
+    </div>
 
-            </div>
+    {/* MOBILE MENU */}
+    <div className="md:hidden">
+      <DropdownItem icon={<PersonIcon />} label="View Profile" onClick={goProfile} />
+      <DropdownItem icon={<NewspaperIcon />} label="News" onClick={goNews} />
+      <DropdownItem icon={<HelpOutlineIcon />} label="Help" onClick={goHelp} />
+      <DropdownItem icon={<LogoutIcon />} label="Logout" onClick={handleLogout} danger />
+    </div>
 
-          )}
+  </div>
+
+)}
+
 
         </div>
 
