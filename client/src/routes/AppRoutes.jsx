@@ -1,18 +1,12 @@
 import { Routes, Route, Outlet, useLocation } from "react-router-dom";
 
-// ================= PUBLIC PAGES =================
-
 import Landing from "../pages/landing/Landing";
 import Login from "../pages/auth/Login";
 import Signup from "../pages/auth/Signup";
 import AboutPage from "../pages/about/AboutPage";
 
-// ================= LEGAL PAGES =================
-
 import PrivacyPolicy from "../pages/privacy/PrivacyPolicy";
 import TermsPage from "../pages/terms/TermsPage";
-
-// ================= PROTECTED PAGES =================
 
 import Gateway from "../pages/gateway/Gateway";
 import Home from "../pages/home/Home";
@@ -23,28 +17,20 @@ import CityPage from "../pages/help/CityPage";
 import ChatPage from "../pages/chat/ChatPage";
 
 import HomeHeader from "../components/home/HomeHeader";
-
 import ProtectedRoute from "./ProtectedRoute";
 
-
-// ================= PROTECTED LAYOUT =================
-
 function ProtectedLayout() {
-
   const location = useLocation();
 
-  // Hide header visually ONLY (do not unmount)
   const hideHeader =
     location.pathname === "/home" ||
-    location.pathname.startsWith("/chat");
+    location.pathname === "/gateway" ||
+    location.pathname.startsWith("/chat") ||
+    location.pathname.startsWith("/help");
 
   return (
     <>
-      {/* KEEP HEADER MOUNTED TO PREVENT SOCKET / ONLINE BUG */}
-      <div style={{ display: hideHeader ? "none" : "block" }}>
-        <HomeHeader />
-      </div>
-
+      {!hideHeader && <HomeHeader />}
       <Outlet />
     </>
   );
@@ -54,19 +40,13 @@ export default function AppRoutes() {
   return (
     <Routes>
 
-      {/* ================= PUBLIC ROUTES ================= */}
-
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/about-us" element={<AboutPage />} />
 
-      {/* ================= LEGAL ROUTES ================= */}
-
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<TermsPage />} />
-
-      {/* ================= PROTECTED GROUP ================= */}
 
       <Route
         element={
@@ -75,7 +55,6 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       >
-
         <Route path="/gateway" element={<Gateway />} />
         <Route path="/home" element={<Home />} />
         <Route path="/chat" element={<ChatPage />} />
@@ -83,13 +62,9 @@ export default function AppRoutes() {
         <Route path="/news" element={<CyberNewsPage />} />
         <Route path="/help" element={<HelpPage />} />
         <Route path="/help/:state" element={<CityPage />} />
-
       </Route>
 
-      {/* ================= FALLBACK ================= */}
-
       <Route path="*" element={<Login />} />
-
     </Routes>
   );
 }
