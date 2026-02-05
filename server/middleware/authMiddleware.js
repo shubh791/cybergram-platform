@@ -2,6 +2,10 @@ import jwt from "jsonwebtoken";
 
 export default function authMiddleware(req, res, next) {
 
+  if (!process.env.JWT_SECRET) {
+    console.warn("⚠️ JWT_SECRET missing in environment");
+  }
+
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -19,6 +23,8 @@ export default function authMiddleware(req, res, next) {
     next();
 
   } catch (error) {
+
+    console.log("JWT ERROR:", error.message);
 
     return res.status(401).json({ message: "Invalid token" });
 

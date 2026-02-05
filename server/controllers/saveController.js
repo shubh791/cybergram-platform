@@ -7,9 +7,21 @@ export const toggleSave = async (req, res) => {
     const userId = req.user.id;
     const postId = Number(req.params.postId);
 
-    if (!postId) {
+    // ✅ Strong validation
+    if (!postId || isNaN(postId)) {
       return res.status(400).json({
         message: "Invalid post id"
+      });
+    }
+
+    // ✅ Ensure post exists
+    const postExists = await prisma.post.findUnique({
+      where: { id: postId }
+    });
+
+    if (!postExists) {
+      return res.status(404).json({
+        message: "Post not found"
       });
     }
 
@@ -24,7 +36,6 @@ export const toggleSave = async (req, res) => {
     });
 
     // ================= UNSAVE =================
-
     if (existing) {
 
       await prisma.save.delete({
@@ -38,7 +49,6 @@ export const toggleSave = async (req, res) => {
     }
 
     // ================= SAVE =================
-
     await prisma.save.create({
       data: {
         userId,
@@ -52,7 +62,7 @@ export const toggleSave = async (req, res) => {
 
   } catch (error) {
 
-    console.error("SAVE ERROR:", error);
+    console.error("SAVE ERROR:", error.message);
 
     res.status(500).json({
       message: "Save failed"

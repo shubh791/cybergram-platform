@@ -1,8 +1,8 @@
 import prisma from "../config/prismaClient.js";
-import cloudinary from "../config/temp.js";
+import cloudinary from "../config/cloudinary.js";
 
 /* ================================
-   CREATE POST (CLOUDINARY)
+   CREATE POST (CLOUDINARY SAFE)
 ================================ */
 
 export const createPost = async (req, res) => {
@@ -22,7 +22,7 @@ export const createPost = async (req, res) => {
       return res.status(400).json({ message: "Post cannot be empty" });
     }
 
-    // 🔥 UPLOAD IMAGES TO CLOUDINARY
+    // 🔥 Upload to Cloudinary
     const imageUrls = [];
     const imagePublicIds = [];
 
@@ -30,9 +30,7 @@ export const createPost = async (req, res) => {
       for (const file of req.files) {
         const result = await cloudinary.uploader.upload(
           `data:${file.mimetype};base64,${file.buffer.toString("base64")}`,
-          {
-            folder: "cybergram/posts",
-          }
+          { folder: "cybergram/posts" }
         );
 
         imageUrls.push(result.secure_url);
@@ -44,22 +42,22 @@ export const createPost = async (req, res) => {
       data: {
         caption,
         category,
-        images: imageUrls,          // ✅ for frontend
-        imagePublicIds,              // ✅ for delete
-        userId,
+        images: imageUrls,
+        imagePublicIds, // ✅ Ensure Prisma schema has this field
+        userId
       },
       include: {
         user: {
           select: {
             id: true,
             username: true,
-            avatar: true,
-          },
+            avatar: true
+          }
         },
         likes: true,
         comments: true,
-        saves: true,
-      },
+        saves: true
+      }
     });
 
     res.status(201).json(post);
@@ -71,7 +69,7 @@ export const createPost = async (req, res) => {
 };
 
 /* ================================
-   FETCH FEED POSTS
+   FETCH POSTS
 ================================ */
 
 export const getPosts = async (req, res) => {
@@ -92,18 +90,18 @@ export const getPosts = async (req, res) => {
           select: {
             id: true,
             username: true,
-            avatar: true,
-          },
+            avatar: true
+          }
         },
         likes: true,
         comments: true,
-        saves: true,
-      },
+        saves: true
+      }
     });
 
     const follows = await prisma.follow.findMany({
       where: { followerId: userId },
-      select: { followingId: true },
+      select: { followingId: true }
     });
 
     const followingIds = follows.map(f => f.followingId);
@@ -112,8 +110,8 @@ export const getPosts = async (req, res) => {
       ...post,
       user: {
         ...post.user,
-        isFollowing: followingIds.includes(post.user.id),
-      },
+        isFollowing: followingIds.includes(post.user.id)
+      }
     }));
 
     res.json(updatedPosts);
@@ -125,7 +123,7 @@ export const getPosts = async (req, res) => {
 };
 
 /* ================================
-   DELETE POST (WITH CLOUDINARY CLEANUP)
+   DELETE POST + CLOUDINARY CLEANUP
 ================================ */
 
 export const deletePost = async (req, res) => {
@@ -134,7 +132,7 @@ export const deletePost = async (req, res) => {
     const userId = req.user.id;
 
     const post = await prisma.post.findUnique({
-      where: { id: postId },
+      where: { id: postId }
     });
 
     if (!post) {
@@ -143,24 +141,28 @@ export const deletePost = async (req, res) => {
 
     if (post.userId !== userId) {
       return res.status(403).json({
-        message: "You are not allowed to delete this post",
+        message: "You are not allowed to delete this post"
       });
     }
 
-    // 🔥 DELETE IMAGES FROM CLOUDINARY
+    // 🔥 Delete from Cloudinary safely
     if (Array.isArray(post.imagePublicIds)) {
       for (const publicId of post.imagePublicIds) {
-        await cloudinary.uploader.destroy(publicId);
+        try {
+          await cloudinary.uploader.destroy(publicId);
+        } catch {
+          console.log("Cloudinary delete skipped");
+        }
       }
     }
 
     await prisma.post.delete({
-      where: { id: postId },
+      where: { id: postId }
     });
 
     res.json({
       success: true,
-      message: "Post deleted successfully",
+      message: "Post deleted successfully"
     });
 
   } catch (error) {
@@ -168,7 +170,8 @@ export const deletePost = async (req, res) => {
     res.status(500).json({ message: "Failed to delete post" });
   }
 };
-// ================= GET SAVED POSTS =================
+
+/* ================= SAVED POSTS ================= */
 
 export const getSavedPosts = async (req, res) => {
   try {
@@ -190,9 +193,7 @@ export const getSavedPosts = async (req, res) => {
           }
         }
       },
-      orderBy: {
-        createdAt: "desc"
-      }
+      orderBy: { createdAt: "desc" }
     });
 
     const posts = saved.map(item => item.post);

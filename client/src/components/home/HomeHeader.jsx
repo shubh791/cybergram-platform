@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 
 // ================= ICONS =================
@@ -10,6 +10,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
 import NewspaperIcon from "@mui/icons-material/Newspaper";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import HomeIcon from "@mui/icons-material/Home";
 
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import CommentIcon from "@mui/icons-material/Comment";
@@ -23,13 +24,15 @@ export default function HomeHeader() {
 
   const [open, setOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-
   const [user, setUser] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const socket = useContext(SocketContext);
+
+  const isNewsPage = location.pathname === "/news";
 
   const { getTotalUnread, loadSaved, activeChatId } =
     useContext(ChatUnreadContext);
@@ -123,15 +126,15 @@ export default function HomeHeader() {
 
   }, []);
 
-  // ================= NAVIGATION =================
-  const goMainProfile = () => {
+  // ================= NAV =================
+  const goProfile = () => {
     setOpen(false);
     if (user?.username) navigate(`/profile/${user.username}`);
   };
 
-  const goProfileFromNotif = (username) => {
-    setNotifOpen(false);
-    navigate(`/profile/${username}`);
+  const goHome = () => {
+    setOpen(false);
+    navigate("/home");
   };
 
   const goNews = () => {
@@ -144,9 +147,7 @@ export default function HomeHeader() {
     navigate("/help");
   };
 
-  const goChat = () => {
-    navigate("/chat");
-  };
+  const goChat = () => navigate("/chat");
 
   // ================= LOGOUT =================
   const handleLogout = () => {
@@ -159,13 +160,12 @@ export default function HomeHeader() {
     navigate("/login");
   };
 
-  // ================= AVATAR FIX (PRODUCTION SAFE) =================
+  // ================= AVATAR =================
   const profileImage =
     user?.avatar?.startsWith("http")
       ? user.avatar
       : "https://i.pravatar.cc/150";
 
-  // ================= ICON SELECT =================
   const getIcon = (type) => {
 
     if (type === "follow") return <PersonAddIcon className="text-cyan-400" />;
@@ -175,7 +175,6 @@ export default function HomeHeader() {
     return <NotificationsIcon className="text-gray-400" />;
   };
 
-  // ================= TIME FORMAT =================
   const formatTime = (time) => {
 
     const diff = Math.floor((Date.now() - time) / 1000);
@@ -191,7 +190,10 @@ export default function HomeHeader() {
     <div className="sticky top-0 z-50 bg-[#081423] border-b border-cyan-500/20 px-4 md:px-6 h-16 flex items-center justify-between">
 
       {/* LOGO */}
-      <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/home")}>
+      <div
+        className="flex items-center gap-2 cursor-pointer"
+        onClick={() => navigate("/home")}
+      >
         <img src="/cybergram-logo.png" className="w-9 h-9" />
         <span className="text-cyan-400 font-bold hidden sm:block">
           CYBERGRAM
@@ -214,10 +216,13 @@ export default function HomeHeader() {
         {/* NOTIFICATIONS */}
         <div ref={notifRef} className="relative">
 
-          <div onClick={() => {
-            setNotifOpen(prev => !prev);
-            setUnreadCount(0);
-          }} className="cursor-pointer">
+          <div
+            onClick={() => {
+              setNotifOpen(prev => !prev);
+              setUnreadCount(0);
+            }}
+            className="cursor-pointer"
+          >
             <NotificationsIcon className="text-cyan-400" />
 
             {unreadCount > 0 && (
@@ -247,8 +252,7 @@ export default function HomeHeader() {
 
                   <div
                     key={n.id}
-                    onClick={() => goProfileFromNotif(n.fromUsername)}
-                    className="px-4 py-3 border-b border-cyan-500/10 flex gap-3 text-sm cursor-pointer hover:bg-cyan-500/5"
+                    className="px-4 py-3 border-b border-cyan-500/10 flex gap-3 text-sm"
                   >
                     {getIcon(n.type)}
 
@@ -274,32 +278,51 @@ export default function HomeHeader() {
         {/* PROFILE MENU */}
         <div ref={dropdownRef} className="relative">
 
-          <div onClick={() => setOpen(p => !p)} className="flex items-center gap-1 cursor-pointer">
+          <div
+            onClick={() => setOpen(p => !p)}
+            className="flex items-center gap-1 cursor-pointer"
+          >
             <img
               src={profileImage}
               className="w-9 h-9 rounded-full border border-cyan-400/40 object-cover"
             />
+
             <ArrowDropDownIcon className="text-cyan-400 hidden md:block" />
           </div>
 
           {open && (
 
-  <div className="absolute right-0 mt-3 w-52 bg-[#081423] border border-cyan-500/20 rounded-xl shadow-xl">
+            <div className="absolute right-0 mt-3 w-52 bg-[#081423] border border-cyan-500/20 rounded-xl shadow-xl">
 
-    <DropdownItem icon={<PersonIcon />} label="View Profile" onClick={goMainProfile} />
+              {/* DESKTOP */}
+              <div className="hidden md:block">
+                <DropdownItem icon={<PersonIcon />} label="View Profile" onClick={goProfile} />
+                <DropdownItem icon={<LogoutIcon />} label="Logout" onClick={handleLogout} danger />
+              </div>
 
-    {/* Mobile only */}
-    <div className="md:hidden">
-      <DropdownItem icon={<NewspaperIcon />} label="News" onClick={goNews} />
-      <DropdownItem icon={<HelpOutlineIcon />} label="Get Help" onClick={goHelp} />
-    </div>
+              {/* MOBILE */}
+              <div className="md:hidden">
 
-    <DropdownItem icon={<LogoutIcon />} label="Logout" onClick={handleLogout} danger />
+                {isNewsPage ? (
+                  <>
+                    <DropdownItem icon={<HomeIcon />} label="Home" onClick={goHome} />
+                    <DropdownItem icon={<HelpOutlineIcon />} label="Help" onClick={goHelp} />
+                  </>
+                ) : (
+                  <>
+                    <DropdownItem icon={<PersonIcon />} label="View Profile" onClick={goProfile} />
+                    <DropdownItem icon={<NewspaperIcon />} label="News" onClick={goNews} />
+                    <DropdownItem icon={<HelpOutlineIcon />} label="Help" onClick={goHelp} />
+                  </>
+                )}
 
-  </div>
+                <DropdownItem icon={<LogoutIcon />} label="Logout" onClick={handleLogout} danger />
 
-)}
+              </div>
 
+            </div>
+
+          )}
 
         </div>
 

@@ -1,6 +1,6 @@
 import prisma from "../config/prismaClient.js";
 import bcrypt from "bcryptjs";
-import cloudinary from "../config/temp.js";
+import cloudinary from "../config/cloudinary.js";
 
 /* ================= GET PROFILE INFO ================= */
 
@@ -51,8 +51,8 @@ export const getUserProfile = async (req, res) => {
       isFollowing,
       _count: {
         posts: user._count.posts,
-        followers: user._count.following,
-        following: user._count.followers
+        followers: user._count.followers,
+        following: user._count.following
       }
     });
 
@@ -144,7 +144,7 @@ export const updateBio = async (req, res) => {
   }
 };
 
-/* ================= UPDATE AVATAR (CLOUDINARY) ================= */
+/* ================= UPDATE AVATAR ================= */
 
 export const updateAvatar = async (req, res) => {
   try {
@@ -156,8 +156,13 @@ export const updateAvatar = async (req, res) => {
       where: { id: req.user.id }
     });
 
+    // Safe delete old avatar
     if (user?.avatarPublicId) {
-      await cloudinary.uploader.destroy(user.avatarPublicId);
+      try {
+        await cloudinary.uploader.destroy(user.avatarPublicId);
+      } catch {
+        console.log("Old avatar delete skipped");
+      }
     }
 
     const uploadResult = await cloudinary.uploader.upload(
@@ -184,7 +189,7 @@ export const updateAvatar = async (req, res) => {
   }
 };
 
-/* ================= DELETE MY ACCOUNT ================= */
+/* ================= DELETE ACCOUNT ================= */
 
 export const deleteMyAccount = async (req, res) => {
   try {
@@ -192,16 +197,12 @@ export const deleteMyAccount = async (req, res) => {
     const { password } = req.body;
 
     if (!password) {
-      return res.status(400).json({ message: "Password is required" });
+      return res.status(400).json({ message: "Password required" });
     }
 
     const user = await prisma.user.findUnique({
       where: { id: userId }
     });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -209,27 +210,23 @@ export const deleteMyAccount = async (req, res) => {
     }
 
     if (user.avatarPublicId) {
-      await cloudinary.uploader.destroy(user.avatarPublicId);
+      try {
+        await cloudinary.uploader.destroy(user.avatarPublicId);
+      } catch {}
     }
 
     await prisma.$transaction([
-      prisma.notification.deleteMany({
-        where: { OR: [{ senderId: userId }, { receiverId: userId }] }
-      }),
-      prisma.message.deleteMany({
-        where: { OR: [{ senderId: userId }, { receiverId: userId }] }
-      }),
+      prisma.notification.deleteMany({ where: { OR: [{ senderId: userId }, { receiverId: userId }] } }),
+      prisma.message.deleteMany({ where: { OR: [{ senderId: userId }, { receiverId: userId }] } }),
       prisma.like.deleteMany({ where: { userId } }),
       prisma.comment.deleteMany({ where: { userId } }),
-      prisma.follow.deleteMany({
-        where: { OR: [{ followerId: userId }, { followingId: userId }] }
-      }),
+      prisma.follow.deleteMany({ where: { OR: [{ followerId: userId }, { followingId: userId }] } }),
       prisma.save.deleteMany({ where: { userId } }),
       prisma.post.deleteMany({ where: { userId } }),
       prisma.user.delete({ where: { id: userId } })
     ]);
 
-    res.json({ success: true, message: "Account deleted permanently" });
+    res.json({ success: true });
 
   } catch (error) {
     console.log("DELETE ACCOUNT ERROR:", error);

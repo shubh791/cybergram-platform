@@ -11,11 +11,11 @@ import {
 
 import verifyToken from "../middleware/authMiddleware.js";
 import optionalAuth from "../middleware/optionalAuth.js";
-import upload from "../middleware/uploadMiddleware.js"; // ✅ MEMORY MULTER
+import upload from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
 
-// ================= STATIC ROUTES =================
+/* ================= STATIC ROUTES ================= */
 
 // Saved posts
 router.get("/saved/me", verifyToken, getSavedPosts);
@@ -23,7 +23,7 @@ router.get("/saved/me", verifyToken, getSavedPosts);
 // Update bio
 router.put("/edit/bio", verifyToken, updateBio);
 
-// Upload avatar (CLOUDINARY)
+// Avatar upload (Cloudinary memory upload)
 router.put(
   "/edit/avatar",
   verifyToken,
@@ -31,10 +31,10 @@ router.put(
   updateAvatar
 );
 
-// ================= DELETE ACCOUNT =================
+// Delete account
 router.delete("/delete/me", verifyToken, deleteMyAccount);
 
-// ================= DYNAMIC ROUTES =================
+/* ================= DYNAMIC ROUTES (KEEP LAST) ================= */
 
 // User posts
 router.get("/:username/posts", getUserPosts);
