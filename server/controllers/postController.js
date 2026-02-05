@@ -139,31 +139,27 @@ export const deletePost = async (req, res) => {
     }
 
     if (post.userId !== userId) {
-      return res.status(403).json({
-        message: "You are not allowed to delete this post"
-      });
+      return res.status(403).json({ message: "Not allowed" });
     }
 
-    // ✅ SAFE CLOUDINARY DELETE
-    const publicIds = post.imagePublicIds || [];
-
-    for (const publicId of publicIds) {
-      try {
-        await cloudinary.uploader.destroy(publicId);
-      } catch {
-        console.log("Cloudinary delete skipped");
+    // 🔥 DELETE CLOUDINARY IMAGES
+    if (Array.isArray(post.imagePublicIds)) {
+      for (const publicId of post.imagePublicIds) {
+        try {
+          await cloudinary.uploader.destroy(publicId);
+        } catch {}
       }
     }
 
-    await prisma.post.delete({
-      where: { id: postId }
-    });
+    // 🔥 CLEAN RELATED TABLES (VERY IMPORTANT)
+    await prisma.$transaction([
+      prisma.like.deleteMany({ where: { postId } }),
+      prisma.comment.deleteMany({ where: { postId } }),
+      prisma.save.deleteMany({ where: { postId } }),
+      prisma.post.delete({ where: { id: postId } })
+    ]);
 
-    // ⭐ IMPORTANT CHANGE
-    res.json({
-      success: true,
-      postId
-    });
+    res.json({ success: true, postId });
 
   } catch (error) {
     console.error("DELETE POST ERROR:", error);
