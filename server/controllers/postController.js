@@ -135,8 +135,12 @@ export const deletePost = async (req, res) => {
     });
 
     if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
+  return res.json({
+    success: true,
+    message: "Already deleted"
+  });
+}
+
 
     if (post.userId !== userId) {
       return res.status(403).json({ message: "Not allowed" });
