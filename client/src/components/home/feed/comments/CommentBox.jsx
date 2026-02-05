@@ -10,75 +10,83 @@ export default function CommentBox({ postId, onCountChange }) {
   const [comments, setComments] = useState([]);
   const [text, setText] = useState("");
   const [replyTo, setReplyTo] = useState(null);
-
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   const fetchComments = async () => {
-
     try {
       const res = await API.get(`/comments/${postId}`);
       setComments(res.data);
     } catch (err) {
       console.error(err);
     }
-
   };
 
   useEffect(() => {
     fetchComments();
-  }, []);
+  }, [postId]);
 
-  // ================= POST COMMENT =================
+  /* ================= POST COMMENT ================= */
 
   const handleSubmit = async () => {
 
-  if (!text.trim()) return;
+    if (!text.trim()) return;
 
-  try {
+    try {
 
-    await API.post(`/comments/${postId}`, {
-      text,
-      parentId: replyTo
-    });
+      await API.post(`/comments/${postId}`, {
+        text,
+        parentId: replyTo
+      });
 
-    setText("");
-    setReplyTo(null);
+      setText("");
+      setReplyTo(null);
 
-    // REFRESH COMMENTS + COUNT
-    const res = await API.get(`/comments/${postId}`);
+      const res = await API.get(`/comments/${postId}`);
+      setComments(res.data);
 
-    setComments(res.data);
-    onCountChange(res.data.length);
+      // ✅ LOCAL COUNT UPDATE
+      onCountChange?.(res.data.length);
 
-  } catch (err) {
-    console.error(err);
-  }
-};
+      // ✅ GLOBAL EVENT SYNC
+      window.dispatchEvent(
+        new CustomEvent("commentAdded", {
+          detail: { postId }
+        })
+      );
 
-  // ================= DELETE =================
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  /* ================= DELETE COMMENT ================= */
 
   const confirmDelete = async () => {
 
-  try {
+    try {
 
-    await API.delete(`/comments/${deleteTarget}`);
+      await API.delete(`/comments/${deleteTarget}`);
+      setDeleteTarget(null);
 
-    setDeleteTarget(null);
+      const res = await API.get(`/comments/${postId}`);
+      setComments(res.data);
 
-    // REFRESH COMMENTS + COUNT
-    const res = await API.get(`/comments/${postId}`);
+      // ✅ LOCAL COUNT UPDATE
+      onCountChange?.(res.data.length);
 
-    setComments(res.data);
-    onCountChange(res.data.length);
+      // ✅ GLOBAL EVENT SYNC
+      window.dispatchEvent(
+        new CustomEvent("commentDeleted", {
+          detail: { postId }
+        })
+      );
 
-  } catch (err) {
-    console.error(err);
-  }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-};
-
-
-  // ================= BUILD TREE =================
+  /* ================= BUILD TREE ================= */
 
   const buildTree = (list, parentId = null) =>
     list
@@ -200,7 +208,6 @@ function CommentItem({ comment, currentUser, onReply, onDelete }) {
 
     <div className="ml-4 mt-3 relative">
 
-      {/* THREAD LINE */}
       <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-cyan-500/20"></div>
 
       <div className="pl-4">
@@ -246,8 +253,6 @@ function CommentItem({ comment, currentUser, onReply, onDelete }) {
           </button>
 
         </div>
-
-        {/* REPLIES */}
 
         {comment.replies?.map(reply => (
 
