@@ -1,5 +1,5 @@
 import prisma from "../config/prismaClient.js";
-import cloudinary from "../config/cloudinary.js";
+import cloudinary from "../config/temp.js";
 
 /* ================================
    CREATE POST (CLOUDINARY)

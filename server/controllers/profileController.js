@@ -1,6 +1,6 @@
 import prisma from "../config/prismaClient.js";
 import bcrypt from "bcryptjs";
-import cloudinary from "../config/cloudinary.js";
+import cloudinary from "../config/temp.js";
 
 /* ================= GET PROFILE INFO ================= */
 
