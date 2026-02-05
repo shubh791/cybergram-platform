@@ -1,19 +1,16 @@
 import { Routes, Route, Outlet, useLocation } from "react-router-dom";
 
 // ================= PUBLIC PAGES =================
-
 import Landing from "../pages/landing/Landing";
 import Login from "../pages/auth/Login";
 import Signup from "../pages/auth/Signup";
 import AboutPage from "../pages/about/AboutPage";
 
 // ================= LEGAL PAGES =================
-
 import PrivacyPolicy from "../pages/privacy/PrivacyPolicy";
 import TermsPage from "../pages/terms/TermsPage";
 
 // ================= PROTECTED PAGES =================
-
 import Gateway from "../pages/gateway/Gateway";
 import Home from "../pages/home/Home";
 import ProfilePage from "../pages/profile/ProfilePage";
@@ -32,11 +29,39 @@ function ProtectedLayout() {
 
   const location = useLocation();
 
-  const hideHeader =
-    location.pathname === "/home" ||
-    location.pathname === "/gateway" ||
-    location.pathname.startsWith("/chat") ||
-    location.pathname.startsWith("/help");
+  // Detect mobile safely
+  const isMobile = window.innerWidth < 768;
+
+  /*
+    HEADER RULES:
+
+    PROFILE → never show
+    HOME → always show
+    NEWS → mobile only
+    HELP / CHAT / GATEWAY → mobile only
+  */
+
+  let hideHeader = false;
+
+  if (location.pathname.startsWith("/profile")) {
+    hideHeader = true;
+  }
+
+  else if (location.pathname === "/home") {
+    hideHeader = false;
+  }
+
+  else if (!isMobile) {
+    // Desktop restrictions
+    if (
+      location.pathname === "/news" ||
+      location.pathname === "/gateway" ||
+      location.pathname.startsWith("/chat") ||
+      location.pathname.startsWith("/help")
+    ) {
+      hideHeader = true;
+    }
+  }
 
   return (
     <>

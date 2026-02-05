@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-import HomeHeader from "../../components/home/HomeHeader";
 import CyberNewsPanel from "../../components/home/CyberNewsPanel";
 import FeedPanel from "../../components/home/feed/FeedPanel";
 import HelpPanel from "../../components/home/HelpPanel";
@@ -12,9 +11,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#050b14]">
 
-      {/* HEADER */}
-      <HomeHeader />
-
+      
       {/* CATEGORY FILTER */}
       <div className="
         px-3 sm:px-4 md:px-6 lg:px-8
