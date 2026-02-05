@@ -308,5 +308,43 @@ body {
   transform: translateY(-6px) scale(1.03);
   box-shadow: 0 0 30px rgba(0,255,255,0.35);
 }
+/* ================= MOBILE GLOBAL FIX ================= */
+
+/* Prevent horizontal scroll everywhere */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Fix mobile 100vh keyboard bug */
+:root {
+  --vh: 100dvh;
+}
+
+.h-screen {
+  height: var(--vh) !important;
+}
+
+/* Images never overflow */
+img, video, canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Prevent textarea/input zoom on Android/iOS */
+input, textarea, select {
+  font-size: 16px !important;
+}
+
+/* Fix flex overflow in chat/feed layouts */
+* {
+  min-width: 0;
+}
+
+/* Smooth scrolling containers */
+.scroll-container {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
 
 
