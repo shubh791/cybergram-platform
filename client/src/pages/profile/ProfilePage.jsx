@@ -58,24 +58,38 @@ export default function ProfilePage() {
     fetchProfile();
   }, [username]);
 
-  /* ================= FOLLOW ================= */
+  /* ================= FOLLOW (FIXED) ================= */
 
   const handleFollowToggle = async () => {
+
+    if (!profile) return;
+
+    // ✅ Instant UI update
+    setProfile(prev => ({
+      ...prev,
+      isFollowing: !prev.isFollowing,
+      _count: {
+        ...prev._count,
+        followers: prev.isFollowing
+          ? prev._count.followers - 1
+          : prev._count.followers + 1
+      }
+    }));
+
     try {
 
       await API.post(`/follow/${username}`);
 
-      // optional background refresh (no UI block)
-      setTimeout(fetchProfile, 800);
-
-      window.dispatchEvent(
-        new CustomEvent("followUpdated", {
-          detail: { username }
-        })
-      );
+      // Background verification refresh
+      setTimeout(fetchProfile, 2000);
 
     } catch (error) {
+
       console.log("Follow error:", error);
+
+      // rollback if API fails
+      fetchProfile();
+
     }
   };
 
@@ -247,7 +261,6 @@ export default function ProfilePage() {
         setActiveTab={setActiveTab}
       />
 
-      {/* ✅ CRITICAL FIX HERE */}
       <ProfilePostsGrid
         activeTab={activeTab}
         posts={posts}
