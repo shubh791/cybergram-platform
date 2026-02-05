@@ -24,8 +24,11 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://cybergram-frotnend.netlify.app"
+  "https://cybergram-frotnend.netlify.app",
+  "https://cybergram.in",
+  "https://www.cybergram.in"
 ];
+
 
 app.use(cors({
   origin: allowedOrigins,
