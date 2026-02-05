@@ -1,16 +1,16 @@
 import { Routes, Route, Outlet, useLocation } from "react-router-dom";
 
-// ================= PUBLIC PAGES =================
+// PUBLIC
 import Landing from "../pages/landing/Landing";
 import Login from "../pages/auth/Login";
 import Signup from "../pages/auth/Signup";
 import AboutPage from "../pages/about/AboutPage";
 
-// ================= LEGAL PAGES =================
+// LEGAL
 import PrivacyPolicy from "../pages/privacy/PrivacyPolicy";
 import TermsPage from "../pages/terms/TermsPage";
 
-// ================= PROTECTED PAGES =================
+// PROTECTED
 import Gateway from "../pages/gateway/Gateway";
 import Home from "../pages/home/Home";
 import ProfilePage from "../pages/profile/ProfilePage";
@@ -23,58 +23,37 @@ import HomeHeader from "../components/home/HomeHeader";
 import ProtectedRoute from "./ProtectedRoute";
 
 
-// ================= PROTECTED LAYOUT =================
+// ================= HEADER CONTROL =================
 
 function ProtectedLayout() {
 
   const location = useLocation();
-
-  // Detect mobile safely
   const isMobile = window.innerWidth < 768;
 
-  /*
-    HEADER RULES:
+  let showHeader = false;
 
-    PROFILE → never show
-    HOME → always show
-    NEWS → mobile only
-    HELP / CHAT / GATEWAY → mobile only
-  */
-
-  let hideHeader = false;
-
-  if (location.pathname.startsWith("/profile")) {
-    hideHeader = true;
+  // Desktop → only home
+  if (!isMobile) {
+    showHeader = location.pathname === "/home";
   }
 
-  else if (location.pathname === "/home") {
-    hideHeader = false;
-  }
-
-  else if (!isMobile) {
-    // Desktop restrictions
-    if (
-      location.pathname === "/news" ||
-      location.pathname === "/gateway" ||
-      location.pathname.startsWith("/chat") ||
-      location.pathname.startsWith("/help")
-    ) {
-      hideHeader = true;
-    }
+  // Mobile → home + news only
+  else {
+    showHeader =
+      location.pathname === "/home" ||
+      location.pathname === "/news";
   }
 
   return (
     <>
-      {/* KEEP HEADER MOUNTED FOR SOCKET STABILITY */}
-      <div style={{ display: hideHeader ? "none" : "block" }}>
-        <HomeHeader />
-      </div>
-
+      {showHeader && <HomeHeader />}
       <Outlet />
     </>
   );
 }
 
+
+// ================= ROUTES =================
 
 export default function AppRoutes() {
   return (
